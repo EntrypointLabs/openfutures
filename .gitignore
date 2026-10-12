@@ -5,3 +5,6 @@ dist
 .parity
 reference
 .turbo
+
+# Linear pickup scratch space (see docs/agents/linear-pickup.md)
+.claude/linear-runs/
