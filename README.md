@@ -47,8 +47,3 @@ To use it from a new workspace, add `"@openfutures/core": "workspace:*"` to its 
 1. Create `apps/<name>` or `packages/<name>` with a `package.json` named `@openfutures/<name>`.
 2. Extend `@openfutures/tsconfig/base.json` in its `tsconfig.json`.
 3. Give it `dev`, `build` and `typecheck` scripts as they apply; Turborepo picks them up.
-
-## Linear pickup
-
-`/linear-start` and `/linear-finish` take an issue in Linear team `OPE` from `Todo` to a pull
-request in `In Review`. See [docs/agents/linear-pickup.md](docs/agents/linear-pickup.md).
