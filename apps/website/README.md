@@ -33,3 +33,21 @@ Pages use clean URLs (`/contact`, not `/contact.html`). The dev and preview serv
 ## Contact form
 
 The form does not send anywhere yet. Set `data-endpoint` on the `<form>` in `contact.html` to a URL that accepts a JSON `POST` (`name`, `email`, `Topic`, `message`). Without it, submitting shows the error state.
+
+## Waitlist UI preview
+
+`/waitlist` provides signup and sign-in with a simulated email-code step. Use **123456**;
+no email is sent and no backend is connected. Verified preview accounts land on
+`/waitlist/dashboard`, with a stable referral code/link, referral activity, member ranking,
+copy/share actions and sign-out. Membership and progress are stored only in this browser
+under `openfutures-waitlist-preview-v1`; the pending code step uses session storage.
+
+The leaderboard includes labeled sample data. Expand **Preview controls** on the dashboard
+and choose **Simulate a referral** to exercise the populated state. To try attribution,
+copy a member's link, sign out, open that link in the same browser, and create a second
+preview account. The first account gains one referral after the second account verifies.
+Sign back in with the original email and code to see the update. Separate browsers/devices
+do not share this local data. Clearing site storage resets the preview.
+
+The new pages use the existing fonts, palette and menu markup. `waitlist-nav.js` adds a
+waitlist entry to the site's existing menu; `waitlist.js` owns only prototype interactions.
