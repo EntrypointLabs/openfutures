@@ -4,13 +4,15 @@ import { InfoTip } from "@/components/common/InfoTip";
 import { ExchangesView } from "@/components/watch/ExchangesView";
 import { FundingView } from "@/components/watch/FundingView";
 import { MarketsView } from "@/components/watch/MarketsView";
-import { WatchChartCard } from "@/components/watch/WatchChartCard";
+import { AnalyticsCard } from "@/components/analytics/AnalyticsCard";
+import type { AnalyticsCardViewModel } from "@/terminal/analytics";
 import type { Kpi } from "@/components/watch/types";
 import { parseStyle } from "@/lib/style";
 import type { TerminalViewModel } from "@/terminal/types";
 
 export function WatchPage({ vm }: { vm: TerminalViewModel }) {
   const kpis: Kpi[] = vm.mw?.kpis || [];
+  const cards: AnalyticsCardViewModel[] = vm.mw?.cards || [];
   return (
     <section id="main" className="page page-watch" aria-label="Market Watch" tabIndex={-1}>
       <div className="page-inner">
@@ -66,7 +68,11 @@ export function WatchPage({ vm }: { vm: TerminalViewModel }) {
             </Fragment>
           ))}
         </div>
-        <WatchChartCard vm={vm} />
+        <div className="ac-grid">
+          {cards.map((card) => (
+            <AnalyticsCard key={card.id} card={card} onSnapshot={vm.mw?.snap} />
+          ))}
+        </div>
         {vm.viewMarkets ? <MarketsView vm={vm} /> : null}
         {vm.viewExchanges ? <ExchangesView vm={vm} /> : null}
         {vm.viewFunding ? <FundingView vm={vm} /> : null}

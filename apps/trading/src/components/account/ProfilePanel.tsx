@@ -1,4 +1,5 @@
 import { Fragment } from "react";
+import { PositionCard } from "@/components/trade/PositionCard";
 import type { TerminalViewModel } from "@/terminal/types";
 
 export function ProfilePanel({ vm }: { vm: TerminalViewModel }) {
@@ -94,30 +95,7 @@ export function ProfilePanel({ vm }: { vm: TerminalViewModel }) {
             <div className="hm-list m-list-plain pc-list">
               {(vm.mlist?.pos || []).map((item: any, i: any) => (
                 <Fragment key={i}>
-                  <button
-                    type="button"
-                    className="hm-row"
-                    aria-haspopup="dialog"
-                    onClick={item?.details}
-                  >
-                    <span className="av">
-                      <img className="logo" src={item?.logo} alt="" />
-                      <img className="av-badge" src={item?.venueLogo} data-venue="1" alt="" />
-                    </span>
-                    <span className="hm-id">
-                      <b className="hm-t2">
-                        <span className="hm-tk">{item?.sym}-PERP</span>
-                        <span className="lev">{item?.lev}</span>
-                      </b>
-                      <small>
-                        <span className={`dir ${item?.sideCls ?? ""}`}>{item?.side}</span>
-                      </small>
-                    </span>
-                    <span className="hm-px num">
-                      <b className={item?.pnlCls}>{item?.pnl}</b>
-                      <small className={item?.pnlCls}>{item?.roeA}</small>
-                    </span>
-                  </button>
+                  <PositionCard position={{ ...item, roe: item.roeA }} />
                 </Fragment>
               ))}
             </div>
@@ -209,6 +187,9 @@ export function ProfilePanel({ vm }: { vm: TerminalViewModel }) {
         ) : null}
       </div>
       <nav className="settings-list" aria-label="Account settings">
+        <button type="button" onClick={vm.goPoints}>
+          Points
+        </button>
         <button type="button" onClick={vm.st?.openIt}>
           Settings
         </button>

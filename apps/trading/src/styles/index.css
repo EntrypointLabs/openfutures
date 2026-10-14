@@ -26,3 +26,9 @@
 @import "./terminal/15-controls.css" layer(components);
 @import "./terminal/16-market-watch-v104.css" layer(components);
 @import "./terminal/17-liquidity.css" layer(components);
+@import "./terminal/18-analytics.css" layer(components);
+@import "./terminal/19-watch-confirmed.css" layer(components);
+@import "./terminal/20-liquidity-confirmed.css" layer(components);
+@import "./terminal/21-copy.css" layer(components);
+@import "./terminal/22-points.css" layer(components);
+@import "./terminal/23-confirmed-shell.css" layer(components);

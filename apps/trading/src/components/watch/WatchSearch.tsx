@@ -24,9 +24,13 @@ export function WatchSearch({
         <path d="m20 20-3.5-3.5" />
       </svg>
       <input
-        type="text"
+        type="search"
         placeholder={label}
         aria-label={label}
+        enterKeyHint="search"
+        autoCapitalize="none"
+        autoCorrect="off"
+        spellCheck={false}
         value={value ?? ""}
         onChange={onChange}
       />

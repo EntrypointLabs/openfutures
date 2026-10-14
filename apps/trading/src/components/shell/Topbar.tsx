@@ -9,6 +9,27 @@ export function Topbar({ vm }: { vm: TerminalViewModel }) {
         <LogoTile variant="brand" />
         <span>OpenFutures</span>
       </a>
+      {vm.screen === "points" ? (
+        <button
+          type="button"
+          className="tb-back"
+          aria-label="Back to profile"
+          onClick={vm.goProfile}
+        >
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            aria-hidden="true"
+          >
+            <path d="m15 18-6-6 6-6" />
+          </svg>
+        </button>
+      ) : null}
+      <span className="tb-title">{vm.pageTitle}</span>
       <nav className="nav" aria-label="Main">
         {(vm.navItems || []).map((navItem: any, i: any) => (
           <Fragment key={i}>
@@ -23,6 +44,9 @@ export function Topbar({ vm }: { vm: TerminalViewModel }) {
           </Fragment>
         ))}
       </nav>
+      <button type="button" className="tb-ai" aria-label="Ask OpenFutures AI" onClick={vm.ai.open}>
+        <LogoTile size="md" />
+      </button>
       <button
         type="button"
         className="srch-trigger"

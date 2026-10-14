@@ -7,7 +7,7 @@ import type { TerminalViewModel } from "@/terminal/types";
  * Focus moves into the sheet on open, stays inside it while open, and returns to whatever
  * opened it on close. Escape closes; submitting the form (Enter in the input) runs `onSubmit`.
  */
-function Sheet({
+export function LiquiditySheet({
   title,
   rows,
   onClose,
@@ -77,49 +77,32 @@ function Sheet({
   );
 }
 
-/** Amount entry for a deposit into the chosen vault. */
+/** The deposit is reviewed and the lock acknowledged before the existing book is updated. */
 export function DepositSheet({ vm }: { vm: TerminalViewModel }) {
   const liq = vm.liq;
+  const review = liq.depositStep === "review";
+  const done = liq.depositStep === "done";
   return (
-    <Sheet
-      title={liq.sheetTitle}
-      rows={liq.sheetRows}
-      onClose={liq.closeSheet}
-      onSubmit={liq.submit}
-    >
-      <label className="fd-lbl" htmlFor="lq-amt">
-        Amount, USDC
-      </label>
-      <div className="fd-amt">
-        <input
-          id="lq-amt"
-          className="fd-input num"
-          type="text"
-          inputMode="decimal"
-          autoComplete="off"
-          placeholder="0.00"
-          aria-describedby="lq-avail lq-est"
-          value={liq.amt}
-          onChange={liq.onAmt}
-        />
-      </div>
-      <div className="cr-chips">
-        {liq.quick.map((chip, i) => (
-          <button key={i} type="button" className="wk-o" onClick={chip.pick}>
-            {chip.label}
-          </button>
-        ))}
-        <span id="lq-avail" className="cr-max num">
-          {liq.avail}
-        </span>
-      </div>
-      <p id="lq-est" className="lq-est num" aria-live="polite">
-        {liq.estEarn}
-      </p>
-      <button type="submit" className="cta fd-cta" disabled={liq.ctaDis}>
-        {liq.cta}
+    <LiquiditySheet key={liq.depositStep} title={liq.sheetTitle} rows={review ? liq.depositReview : done ? [] : liq.sheetRows}
+      onClose={liq.closeSheet} onSubmit={review ? liq.submit : done ? liq.viewDeposits : liq.reviewDeposit}>
+      {done ? <div className="lqm-done"><span className="lqm-ok" aria-hidden="true">✓</span><b>Deposit complete</b><p>{liq.depositDone}</p></div> : null}
+      {review ? <>
+        <div className="lqm-review-amount num"><small>Deposit (USDC)</small><b>{liq.depositAmount}</b></div>
+        <label className="lqm-ack"><input type="checkbox" checked={liq.depositAck} onChange={liq.toggleAck} /><span>{liq.lockAck}</span></label>
+        <button type="button" className="lq-back" onClick={liq.backDeposit}>Back</button>
+      </> : null}
+      {!review && !done ? <>
+        <label className="fd-lbl" htmlFor="lq-amt">Amount, USDC</label>
+        <div className="fd-amt"><input id="lq-amt" className="fd-input num" type="text" inputMode="decimal" autoComplete="off" placeholder="0.00"
+          aria-describedby="lq-avail lq-est" value={liq.amt} onChange={liq.onAmt} /></div>
+        <div className="cr-chips">{liq.quick.map((chip) => <button key={chip.label} type="button" className="wk-o" onClick={chip.pick}>{chip.label}</button>)}
+          <span id="lq-avail" className="cr-max num">{liq.avail}</span></div>
+        <p id="lq-est" className="lq-est num" aria-live="polite">{liq.estEarn}</p>
+      </> : null}
+      <button type="submit" className="cta fd-cta" disabled={done ? false : review ? liq.confirmDis : liq.ctaDis}>
+        {done ? "View Deposits" : review ? "Confirm Deposit" : liq.ctaDis ? liq.cta : "Review"}
       </button>
-    </Sheet>
+    </LiquiditySheet>
   );
 }
 
@@ -127,7 +110,7 @@ export function DepositSheet({ vm }: { vm: TerminalViewModel }) {
 export function EarlyExitSheet({ vm }: { vm: TerminalViewModel }) {
   const liq = vm.liq;
   return (
-    <Sheet
+    <LiquiditySheet
       title={liq.exitTitle}
       rows={liq.exitRows}
       onClose={liq.closeSheet}
@@ -136,6 +119,6 @@ export function EarlyExitSheet({ vm }: { vm: TerminalViewModel }) {
       <button type="submit" className="cta fd-cta lq-exit-cta">
         Exit and Pay the Penalty
       </button>
-    </Sheet>
+    </LiquiditySheet>
   );
 }

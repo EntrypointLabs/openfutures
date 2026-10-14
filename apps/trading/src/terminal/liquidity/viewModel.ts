@@ -21,6 +21,9 @@ import {
   type HoverFactory,
 } from "@/terminal/liquidity/analytics";
 import { formatDate, formatShort, formatUsdc } from "@/terminal/liquidity/format";
+import { liquidityAnalyticsCards } from "@/terminal/liquidity/cards";
+import { buildAnalyticsDropdown, FILTER_ICON } from "@/terminal/analytics";
+import { buildLiquidityPhone } from "@/terminal/liquidity/phone";
 import { seedBook, type LiquidityBook } from "@/terminal/liquidity/positions";
 import { fundedTraders, type FundedTrader } from "@/terminal/liquidity/traders";
 import { vaultSnapshots, type VaultSnapshot } from "@/terminal/liquidity/vaults";
@@ -46,7 +49,7 @@ export interface LiquidityContext {
 type SortKey = "term" | "dep" | "liq" | "util" | "apr";
 type DockTab = "deposits" | "activity";
 type LotFilter = "all" | "locked" | "unlocked";
-type TraderSort = "size" | "pnl" | "days";
+type TraderSort = "size" | "pnl" | "drawdown" | "days";
 
 const SORT_HEADS: [SortKey, string][] = [
   ["term", "Term (days)"],
@@ -84,21 +87,26 @@ function sortValue(vault: VaultSnapshot, key: SortKey): number {
  * `lqDD` (open dropdown), `lqSearch`, `lqTab` and `lqDock` (the positions dock), `lqPosF`,
  * `lqSheet` (term being deposited into), `lqAmt`, `lqExit` (lot being exited), `lqHov`
  * (hovered chart point), `lqTraderSort`, and `lqBook`, the depositor's lots and activity.
+ * `lqStep`, `lqAck`, and `lqDone` own the reviewed deposit flow. Phone presentation uses
+ * `lqmTab`, `lqmPF`, `lqmV`, `lqmR`, `lqmPick`, `lqmLot`, `lqmLs`, and `lqmWA`.
+ * Analytics cards use the shared per-card `acGran`, `acMode`, `acOff`, and `acHov` state.
  */
 export function buildLiquidityViewModel(ctx: LiquidityContext) {
   const { terminal, state, paginate, showToast } = ctx;
   const set = (patch: TerminalState) => terminal.setState(patch);
+  const viewportWidth = state.vw || (typeof window !== "undefined" ? window.innerWidth : 1440);
+  const isMobile = viewportWidth < 768;
   const today = Math.floor(state.now / DAY_MS) * DAY_MS;
   const vaults = vaultSnapshots(today);
   const view: "vaults" | "analytics" = state.lqView === "analytics" ? "analytics" : "vaults";
 
   // Vault table: filter by term, then sort.
   const termFilter: VaultTerm[] = state.lqTermF || [];
-  const sort: { k: SortKey; d: 1 | -1 } = state.lqSort || { k: "dep", d: -1 };
+  const sort: { k: SortKey; d: 1 | -1 } = state.lqSort || { k: "apr", d: -1 };
   const shownVaults = vaults
     .filter((vault) => !termFilter.length || termFilter.includes(vault.term))
     .sort((a, b) => (sortValue(a, sort.k) - sortValue(b, sort.k)) * sort.d);
-  const openDeposit = (term: VaultTerm) => () => set({ lqSheet: term, lqAmt: "" });
+  const openDeposit = (term: VaultTerm) => () => set({ lqSheet: term, lqAmt: "", lqStep: "amount", lqAck: false, lqDone: null, lqmPick: false });
   const rows = shownVaults.map((vault, index) => ({
     num: String(index + 1),
     vault: vault.term + "-Day Vault",
@@ -144,7 +152,7 @@ export function buildLiquidityViewModel(ctx: LiquidityContext) {
       on: formatDate(lot.at),
       unlock: formatDate(lot.unlockAt),
       apr: lot.apr.toFixed(2),
-      daysLeft: kind === "locked" ? String(valuation.daysLeft) : "—",
+      daysLeft: kind === "locked" ? String(valuation.daysLeft) : "0",
       deposited: formatUsdc(lot.amount),
       value: formatUsdc(valuation.value),
       earned: "+" + formatUsdc(valuation.earned),
@@ -154,6 +162,7 @@ export function buildLiquidityViewModel(ctx: LiquidityContext) {
       canExit: kind === "locked",
       withdraw: () => {
         saveBook({
+          cashDelta: (book.cashDelta || 0) + valuation.value,
           lots: book.lots.map((l) =>
             l.id === lot.id ? { ...l, status: "withdrawn", earned: valuation.earned } : l,
           ),
@@ -187,8 +196,8 @@ export function buildLiquidityViewModel(ctx: LiquidityContext) {
       amt:
         (entry.act === "Deposit" ? "+" : entry.act === "Unlock" ? "" : "−") +
         formatUsdc(entry.amount),
-      apr: entry.apr ? entry.apr.toFixed(2) : "—",
-      pen: entry.penalty ? formatUsdc(entry.penalty) : "—",
+      apr: entry.apr ? entry.apr.toFixed(2) : "-",
+      pen: entry.penalty ? formatUsdc(entry.penalty) : "-",
     })),
   );
   const activeLotCount = book.lots.filter((lot) => lot.status !== "withdrawn").length;
@@ -198,9 +207,11 @@ export function buildLiquidityViewModel(ctx: LiquidityContext) {
   // Deposit sheet.
   const sheetVault = vaults.find((vault) => vault.term === state.lqSheet) || null;
   const amount = parseFloat(state.lqAmt) || 0;
-  const balance = Math.max(0, ctx.availableBalance);
+  const balance = Math.max(0, ctx.availableBalance + (book.cashDelta || 0));
+  const depositStep = state.lqStep || "amount";
+  const estimatedEarn = sheetVault ? amount * sheetVault.apr / 100 * sheetVault.term / 365 : 0;
   const submitDeposit = () => {
-    if (!sheetVault || !amount || amount > balance) {
+    if (!sheetVault || !amount || amount > balance || !state.lqAck) {
       return;
     }
     const lot: VaultLot = {
@@ -214,6 +225,7 @@ export function buildLiquidityViewModel(ctx: LiquidityContext) {
     };
     saveBook(
       {
+        cashDelta: (book.cashDelta || 0) - amount,
         lots: [lot].concat(book.lots),
         log: logWith({
           at: today,
@@ -224,7 +236,7 @@ export function buildLiquidityViewModel(ctx: LiquidityContext) {
           penalty: 0,
         }),
       },
-      { lqSheet: null, lqAmt: "", lqTab: "deposits", lqDock: true },
+      { lqStep: "done", lqDone: { amount, apr: lot.apr, unlockAt: lot.unlockAt }, lqAmt: "", lqTab: "deposits", lqDock: true },
     );
     showToast(
       "Deposited " +
@@ -238,7 +250,7 @@ export function buildLiquidityViewModel(ctx: LiquidityContext) {
   };
 
   // Early exit sheet.
-  const exiting = lots.find((row) => row.id === state.lqExit) || null;
+  const exiting = lots.find((row) => row.id === state.lqExit && row.kind === "locked") || null;
   const exitReceive = exiting ? exiting.valuation.value * (1 - exiting.valuation.penalty) : 0;
   const confirmExit = () => {
     if (!exiting) {
@@ -246,6 +258,7 @@ export function buildLiquidityViewModel(ctx: LiquidityContext) {
     }
     saveBook(
       {
+        cashDelta: (book.cashDelta || 0) + exitReceive,
         lots: book.lots.map((l) =>
           l.id === exiting.id ? { ...l, status: "withdrawn", earned: exiting.valuation.earned } : l,
         ),
@@ -258,7 +271,7 @@ export function buildLiquidityViewModel(ctx: LiquidityContext) {
           penalty: exiting.valuation.value - exitReceive,
         }),
       },
-      { lqExit: null },
+      { lqExit: null, lqmLot: null },
     );
     showToast("Received " + formatUsdc(exitReceive) + " USDC after the early exit penalty.");
   };
@@ -285,22 +298,18 @@ export function buildLiquidityViewModel(ctx: LiquidityContext) {
 
   // Funded traders table.
   const traderSort: TraderSort = state.lqTraderSort || "size";
-  const traders = (ctx.you ? [ctx.you] : [])
-    .concat(fundedTraders())
-    .sort((a, b) =>
-      traderSort === "pnl"
-        ? b.pnl - a.pnl
-        : traderSort === "days"
-          ? b.days - a.days
-          : b.size - a.size,
-    );
+  const traderDirection = state.lqTraderDirection === 1 ? 1 : -1;
+  const traderSizes: number[] = state.lqTraderSizes || [];
+  const traders = (ctx.you ? [ctx.you] : []).concat(fundedTraders())
+    .filter((trader) => !traderSizes.length || traderSizes.includes(trader.size))
+    .sort((a, b) => (a[traderSort] - b[traderSort]) * traderDirection);
   const tradersPage = paginate(
     "vault-traders",
     traders.map((trader) => ({
       name: trader.name,
       rowCls: "pv-tr" + (trader.you ? " is-you" : ""),
       size: trader.size.toLocaleString("en-US"),
-      pnl: (trader.pnl >= 0 ? "▲ " : "▼ ") + Math.abs(trader.pnl * 100).toFixed(2),
+      pnl: (trader.pnl * 100).toFixed(2),
       pnlCls: trader.pnl >= 0 ? "up" : "down",
       dd: (trader.drawdown * 100).toFixed(0),
       ddW: Math.max(2, trader.drawdown * 100).toFixed(0),
@@ -312,7 +321,28 @@ export function buildLiquidityViewModel(ctx: LiquidityContext) {
   );
 
   const isAnalytics = view === "analytics";
+  const app = buildLiquidityPhone({ state, set, vaults, lots, book, today, openDeposit, confirmExit,
+    withdrawAll: () => {
+      const free = lots.filter((row) => row.kind === "free");
+      if (!free.length) return;
+      const total = free.reduce((sum, row) => sum + row.valuation.value, 0);
+      saveBook({
+        cashDelta: (book.cashDelta || 0) + total,
+        lots: book.lots.map((lot) => {
+          const row = free.find((item) => item.id === lot.id);
+          return row ? { ...lot, status: "withdrawn", earned: row.valuation.earned } : lot;
+        }),
+        log: free.map((row): VaultActivity => ({ at: today, act: "Withdraw", term: row.lot.term,
+          amount: row.valuation.value, apr: row.lot.apr, penalty: 0 })).concat(book.log),
+      }, { lqmWA: false });
+      showToast("Withdrew " + formatUsdc(total) + " USDC to your trading balance.");
+    },
+  });
   return {
+    isMobile,
+    app,
+    goAnalytics: () => set({ lqView: "analytics", lqDD: null }),
+    goVaults: () => set({ lqView: "vaults", lqDD: null }),
     views: (
       [
         ["vaults", "Vaults"],
@@ -404,10 +434,28 @@ export function buildLiquidityViewModel(ctx: LiquidityContext) {
 
     // Deposit sheet
     sheetOpen: !!sheetVault,
-    sheetTitle: sheetVault ? "Deposit to the " + sheetVault.term + "-Day Vault" : "",
+    sheetTitle: depositStep === "review" ? "Review Deposit" : depositStep === "done" ? "Deposit Complete" : sheetVault ? "Deposit to the " + sheetVault.term + "-Day Vault" : "",
+    depositStep,
+    depositAck: !!state.lqAck,
+    toggleAck: () => set({ lqAck: !state.lqAck }),
+    reviewDeposit: () => { if (sheetVault && amount > 0 && amount <= balance) set({ lqStep: "review", lqAck: false }); },
+    backDeposit: () => set({ lqStep: "amount" }),
+    confirmDis: !state.lqAck || !amount || amount > balance,
+    depositAmount: formatUsdc(amount),
+    depositReview: sheetVault ? [
+      { k: "Vault", v: sheetVault.term + "-Day Vault" },
+      { k: "APR Locked (%)", v: sheetVault.apr.toFixed(2) },
+      { k: "Unlocks On", v: formatDate(sheetVault.unlockAt) },
+      { k: "Earned by Unlock (USDC)", v: formatUsdc(estimatedEarn) },
+      { k: "Value at Unlock (USDC)", v: formatUsdc(amount + estimatedEarn) },
+      { k: "Early Exit (%)", v: "10 now, 0 at unlock" },
+    ] : [],
+    lockAck: sheetVault ? "I understand this USDC is locked until " + formatDate(sheetVault.unlockAt) + ", and leaving early costs up to 10%." : "",
+    depositDone: state.lqDone ? formatUsdc(state.lqDone.amount) + " USDC locked at " + state.lqDone.apr.toFixed(2) + "% APR until " + formatDate(state.lqDone.unlockAt) + "." : "",
+    viewDeposits: () => set({ lqSheet: null, lqmV: null, lqmTab: "deposits", lqmPF: "all" }),
     sheetRows: sheetVault
       ? [
-          { k: "APR, locked today", v: sheetVault.apr.toFixed(2) + "%" },
+          { k: "APR Locked (%)", v: sheetVault.apr.toFixed(2) },
           {
             k: "Unlocks on",
             v: formatDate(sheetVault.unlockAt) + ", in " + sheetVault.term + " days",
@@ -419,7 +467,7 @@ export function buildLiquidityViewModel(ctx: LiquidityContext) {
     amt: state.lqAmt || "",
     onAmt: (event: React.ChangeEvent<HTMLInputElement>) =>
       set({ lqAmt: cleanAmount(event.target.value) }),
-    quick: [25, 50, 100].map((pct) => ({
+    quick: [25, 50, 75, 100].map((pct) => ({
       label: pct === 100 ? "Max" : pct + "%",
       pick: () => set({ lqAmt: ((balance * pct) / 100).toFixed(2) }),
     })),
@@ -437,7 +485,7 @@ export function buildLiquidityViewModel(ctx: LiquidityContext) {
       : "Enter an amount",
     ctaDis: !amount || amount > balance,
     submit: submitDeposit,
-    closeSheet: () => set({ lqSheet: null, lqExit: null }),
+    closeSheet: () => set({ lqSheet: null, lqExit: null, lqStep: "amount" }),
 
     // Early exit sheet
     exitOpen: !!exiting,
@@ -454,7 +502,11 @@ export function buildLiquidityViewModel(ctx: LiquidityContext) {
 
     // Analytics, only built while that view is on screen.
     legend: vaultLegend(),
-    kpis: isAnalytics ? liquidityKpis(vaults) : [],
+    kpis: isAnalytics ? liquidityKpis(vaults).filter((_, index) => [0, 1, 3, 5].includes(index)) : [],
+    analyticsCards: isAnalytics ? liquidityAnalyticsCards(vaults, today, state, set) : [],
+    traderSizeControl: buildAnalyticsDropdown("liq-trader-size", "Account Size", FILTER_ICON,
+      [{ v: "all", label: "All account sizes" }, ...[10000, 25000, 50000, 100000].map((size) => ({ v: String(size), label: size.toLocaleString("en-US") + " USD" }))],
+      traderSizes.length === 1 ? String(traderSizes[0]) : "all", state, set, (value) => ({ lqTraderSizes: value === "all" ? [] : [Number(value)] })),
     unlocks: isAnalytics ? unlockSchedule(vaults, today, hover, hoverHandlers) : null,
     hist: isAnalytics ? depositsByVault(vaults, today, hover, hoverHandlers) : null,
     curve: isAnalytics ? entryAprByDay(vaults, today, hover, hoverHandlers) : null,
@@ -462,6 +514,16 @@ export function buildLiquidityViewModel(ctx: LiquidityContext) {
     funded: isAnalytics ? capitalFunded(today, hover, hoverHandlers) : null,
     traders: tradersPage.rows,
     tradersPager: tradersPage.pager,
+    traderHeads: ([["size", "Account (USD)"], ["pnl", "PnL (%)"], ["drawdown", "Drawdown Used (%)"], ["days", "Days"]] as const).map(([key, label]) => ({
+      label, cls: "pv-sort" + (traderSort === key ? " is-on" : ""),
+      arrow: traderSort === key ? (traderDirection === 1 ? "↑" : "↓") : "↕",
+      sortDir: (traderSort === key ? traderDirection === 1 ? "ascending" : "descending" : "none") as "ascending" | "descending" | "none",
+      pick: () => set({ lqTraderSort: key, lqTraderDirection: traderSort === key ? -traderDirection : -1 }),
+    })),
+    traderSizes: [10000, 25000, 50000, 100000].map((size) => ({ label: size.toLocaleString("en-US"), checked: traderSizes.includes(size),
+      pick: () => set({ lqTraderSizes: traderSizes.includes(size) ? traderSizes.filter((v) => v !== size) : [...traderSizes, size] }) })),
+    traderSizeOpen: state.lqDD === "traderSize",
+    toggleTraderSize: () => set({ lqDD: state.lqDD === "traderSize" ? null : "traderSize" }),
     traderSorts: (
       [
         ["size", "Account"],

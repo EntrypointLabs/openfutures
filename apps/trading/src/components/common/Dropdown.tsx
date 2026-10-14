@@ -23,7 +23,15 @@ export interface DropdownModel {
 }
 
 /** Listbox dropdown (`.dd`) with arrow-key, Home/End and Escape support. */
-export function Dropdown({ dd }: { dd?: DropdownModel }) {
+export function Dropdown({
+  dd,
+  variant = "standard",
+  icon,
+}: {
+  dd?: DropdownModel;
+  variant?: "standard" | "analytics";
+  icon?: string;
+}) {
   const btnRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const opts = dd?.opts || [];
@@ -101,18 +109,42 @@ export function Dropdown({ dd }: { dd?: DropdownModel }) {
   };
 
   return (
-    <div className="dd">
+    <div className={variant === "analytics" ? "dd ac-dd" : "dd"}>
       <button
         ref={btnRef}
         type="button"
         className={dd?.btnCls}
         aria-haspopup="listbox"
-        aria-expanded={dd?.openStr === "true"}
+        aria-expanded={open}
+        aria-label={variant === "analytics" ? dd?.label : undefined}
         onClick={dd?.toggle}
         onKeyDown={onButtonKey}
       >
-        <span className="dd-l">{dd?.label}</span>
-        <b>{dd?.cur}</b>
+        {variant === "analytics" ? (
+          <>
+            {icon ? (
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d={icon} />
+              </svg>
+            ) : null}
+            <span>{dd?.cur}</span>
+          </>
+        ) : (
+          <>
+            <span className="dd-l">{dd?.label}</span>
+            <b>{dd?.cur}</b>
+          </>
+        )}
         <svg
           className="dd-chev"
           width="14"
@@ -132,13 +164,13 @@ export function Dropdown({ dd }: { dd?: DropdownModel }) {
           <button
             type="button"
             className="dd-scrim"
-            aria-label="Close"
+            aria-label={variant === "analytics" ? `Close ${dd?.label || "menu"}` : "Close"}
             tabIndex={-1}
             onClick={dd?.close}
           />
           <div
             ref={menuRef}
-            className="dd-menu"
+            className={variant === "analytics" ? "dd-menu ac-menu" : "dd-menu"}
             role="listbox"
             aria-label={dd?.label}
             onKeyDown={onMenuKey}

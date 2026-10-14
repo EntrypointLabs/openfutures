@@ -1,127 +1,213 @@
-import { Fragment } from "react";
-import { Dropdown } from "@/components/common/Dropdown";
 import { InfoTip } from "@/components/common/InfoTip";
-import { Pager } from "@/components/common/Pager";
 import { SnapshotButton } from "@/components/common/SnapshotButton";
-import { WatchEmpty, WatchSearch } from "@/components/watch/WatchSearch";
-import type { ExchangeRow } from "@/components/watch/types";
+import { AnalyticsDropdown, TableFooter } from "@/components/analytics/controls";
+import { WatchEmpty, WatchSearch } from "./WatchSearch";
+import type { ExchangeRow } from "./types";
 import type { TerminalViewModel } from "@/terminal/types";
 
+function VenueDetails({ venue }: { venue: ExchangeRow }) {
+  return (
+    <div className="vx-detail">
+      <div className="vx-oi">
+        <span className="vx-k">Open Interest (USD)</span>
+        <b className="num">{venue.oiN}</b>
+        <span className={`num vx-chg ${venue.chgCls}`}>{venue.chg} in 30 days</span>
+        <svg
+          className="vx-spark"
+          viewBox="0 0 100 28"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          <path d={venue.area} fill={venue.sparkCol} fillOpacity="0.12" />
+          <path
+            d={venue.spark}
+            fill="none"
+            stroke={venue.sparkCol}
+            strokeWidth="1.8"
+            vectorEffect="non-scaling-stroke"
+          />
+        </svg>
+        <span className="vx-k">Last 60 days</span>
+      </div>
+      <dl className="vx-grid num">
+        <div>
+          <dt>Turnover (x)</dt>
+          <dd>{venue.turnN}</dd>
+        </div>
+        <div>
+          <dt>Long / Short</dt>
+          <dd className={venue.lsCls}>{venue.ls}</dd>
+        </div>
+        <div>
+          <dt>Funding, APR (%)</dt>
+          <dd className={venue.fundCls}>{venue.funding}</dd>
+        </div>
+        <div>
+          <dt>Liquidations, 24h (USD)</dt>
+          <dd>{venue.liqN}</dd>
+        </div>
+        <div>
+          <dt>Top by Open Interest</dt>
+          <dd className="vx-mk">
+            <img className="logo xxs" src={venue.topOiLogo} alt="" />
+            {venue.topOi}
+          </dd>
+        </div>
+        <div>
+          <dt>Top by Volume</dt>
+          <dd className="vx-mk">
+            <img className="logo xxs" src={venue.topVolLogo} alt="" />
+            {venue.topVol}
+          </dd>
+        </div>
+        <div>
+          <dt>Chain</dt>
+          <dd>{venue.chain}</dd>
+        </div>
+        <div>
+          <dt>Updated</dt>
+          <dd>{venue.updated}</dd>
+        </div>
+      </dl>
+    </div>
+  );
+}
 export function ExchangesTableCard({ vm }: { vm: TerminalViewModel }) {
   const rows: ExchangeRow[] = vm.exListP || [];
   return (
-    <section className="mw-card snap-card mw-tablecard" data-snap="venues-table">
+    <section className="mw-card snap-card mw-tablecard vx-card" data-snap="venues-table">
       <div className="mw-card-h">
         <div>
           <h2 className="h-i">
-            All Venues
-            <InfoTip tip="Every connected venue with volume, open interest, its top markets and feed health" />
+            Venues
+            <InfoTip tip="Every connected venue ranked by open interest. Tap a row for turnover, positioning, funding and top markets." />
           </h2>
           <p>{vm.mwTableSub?.venues}</p>
         </div>
-        <SnapshotButton onClick={vm.mw?.snap} />
-      </div>
-      <div className="mw-card-tools">
-        <div className="wfilter">
-          <Dropdown dd={vm.mw?.dd?.xtype} />
-          <WatchSearch label="Search exchanges" value={vm.xq} onChange={vm.onXq} />
+        <div className="mw-card-a">
+          <WatchSearch label="Search venues" value={vm.xq} onChange={vm.onXq} />
+          <SnapshotButton onClick={vm.mw?.snap} />
         </div>
       </div>
-      <div className="wt wt-ex num" role="table" aria-label="Exchanges">
+      <div className="wt wt-ex vx num" role="table" aria-label="Venues">
         <div className="wt-row wt-head" role="row">
-          <div role="columnheader">
-            <span className="rk">#</span>Exchange
-          </div>
-          <div role="columnheader">Chain</div>
-          <div role="columnheader">Markets</div>
-          <div role="columnheader">24h Volume (USD)</div>
-          <div role="columnheader">Open Interest (USD)</div>
-          <div role="columnheader">Top by Volume</div>
-          <div role="columnheader">Top by OI</div>
-          <div role="columnheader">Funding Range, APR (%)</div>
-          <div role="columnheader">Feed</div>
-          <div role="columnheader">Updated</div>
+          {[
+            "Venue",
+            "Markets",
+            "Open Interest (USD)",
+            "24h Volume (USD)",
+            "30D (%)",
+            "Share of OI (%)",
+            "Funding Range, APR (%)",
+            "Feed",
+          ].map((label, index) => (
+            <div key={label} role="columnheader">
+              {index === 0 ? <span className="rk">#</span> : null}
+              {label}
+            </div>
+          ))}
         </div>
-        {rows.map((exListPItem, i) => (
-          <Fragment key={i}>
-            <div className="wt-group" role="rowgroup">
-              <div className="wt-row" role="row">
-                <div role="cell">
-                  <span className="xc-name">
-                    <span className="rk num">{exListPItem?.num}</span>
-                    <img className="logo sm" src={exListPItem?.logo} data-venue="1" alt="" />
-                    <span className="wname">
-                      <b>
-                        {exListPItem?.name}
-                        <span className="lev xtype">{exListPItem?.type}</span>
-                      </b>
-                      <small className="mono">{exListPItem?.url}</small>
-                    </span>
+        {rows.map((venue) => (
+          <div key={venue.name} className={`wt-group ${venue.groupCls}`} role="rowgroup">
+            <div className="wt-row" role="row">
+              <div role="cell">
+                <span className="rk num">{venue.num}</span>
+                <button
+                  type="button"
+                  className="wasset vx-btn"
+                  aria-expanded={venue.isOpen}
+                  onClick={venue.toggle}
+                >
+                  <svg
+                    className="wchev"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    aria-hidden="true"
+                  >
+                    <path d="m9 6 6 6-6 6" />
+                  </svg>
+                  <img className="logo sm" src={venue.logo} data-venue="1" alt="" />
+                  <span className="wname">
+                    <b>
+                      {venue.name}
+                      <span className="lev xtype">{venue.type}</span>
+                    </b>
+                    <small className="mono">{venue.host}</small>
                   </span>
-                </div>
-                <div role="cell">{exListPItem?.chain}</div>
-                <div role="cell">{exListPItem?.markets}</div>
-                <div role="cell">{exListPItem?.volN}</div>
-                <div role="cell">{exListPItem?.oiN}</div>
-                <div role="cell">
-                  <span className="xcell r">
-                    <img className="logo xxs" src={exListPItem?.topVolLogo} alt="" />
-                    {exListPItem?.topVol}
-                  </span>
-                </div>
-                <div role="cell">
-                  <span className="xcell r">
-                    <img className="logo xxs" src={exListPItem?.topOiLogo} alt="" />
-                    {exListPItem?.topOi}
-                  </span>
-                </div>
-                <div role="cell">
-                  <span className="down">{exListPItem?.fMinN}</span> to {exListPItem?.fMaxN}
-                </div>
-                <div role="cell">
-                  <span className="feedc r">
-                    <span className={exListPItem?.dotCls} />
-                    {exListPItem?.status},{" "}
-                    <span className={exListPItem?.latCls}>{exListPItem?.lat}</span>
-                  </span>
-                </div>
-                <div role="cell" className="muted">
-                  {exListPItem?.updated}
-                </div>
+                </button>
+              </div>
+              <div role="cell">{venue.markets}</div>
+              <div role="cell">{venue.oiN}</div>
+              <div role="cell">{venue.volN}</div>
+              <div role="cell" className={venue.d30Cls}>
+                {venue.d30}
+              </div>
+              <div role="cell">
+                <span className="vx-sh">
+                  <em>{venue.shareN}</em>
+                  <i>
+                    <b style={{ width: `${venue.shareW}%`, background: venue.color }} />
+                  </i>
+                </span>
+              </div>
+              <div role="cell">
+                <span className="down">{venue.fMinN}</span> to {venue.fMaxN}
+              </div>
+              <div role="cell">
+                <span className="feedc r">
+                  <span className={venue.dotCls} />
+                  {venue.status}, <span className={venue.latCls}>{venue.lat}</span>
+                </span>
               </div>
             </div>
-          </Fragment>
+            {venue.isOpen ? (
+              <div role="row">
+                <div role="cell" aria-colspan={8}>
+                  <VenueDetails venue={venue} />
+                </div>
+              </div>
+            ) : null}
+          </div>
         ))}
       </div>
-      <div className="wlist">
-        {rows.map((exListPItem, i) => (
-          <Fragment key={i}>
-            <div className="wrow-m xrow-m">
-              <img className="logo" src={exListPItem?.logo} data-venue="1" alt="" />
+      <div className="wlist vx-list">
+        {rows.map((venue) => (
+          <div key={venue.name} className={`vx-m ${venue.groupCls}`}>
+            <button
+              type="button"
+              className="wrow-m xrow-m"
+              aria-expanded={venue.isOpen}
+              onClick={venue.toggle}
+            >
+              <img className="logo" src={venue.logo} data-venue="1" alt="" />
               <span className="wname">
                 <b>
-                  {exListPItem?.name}
-                  <span className="lev xtype">{exListPItem?.type}</span>
+                  {venue.name}
+                  <span className="lev xtype">{venue.type}</span>
                 </b>
                 <small className="num">
-                  {exListPItem?.chain}, {exListPItem?.markets} markets
+                  {venue.markets} markets, {venue.shareN}% of OI
                 </small>
               </span>
               <span className="mk-price num">
-                <span>{exListPItem?.vol}</span>
-                <small className="feedc">
-                  <span className={exListPItem?.dotCls} />
-                  {exListPItem?.lat}
-                </small>
+                <span>{venue.oi}</span>
+                <small className={venue.chgCls}>{venue.chg}</small>
               </span>
-            </div>
-          </Fragment>
+            </button>
+            {venue.isOpen ? <VenueDetails venue={venue} /> : null}
+          </div>
         ))}
       </div>
       {vm.noEx ? (
-        <WatchEmpty title="No exchanges match">Try Binance, DEX or Arbitrum.</WatchEmpty>
+        <WatchEmpty title="No venues match">Try Binance, DEX or Arbitrum.</WatchEmpty>
       ) : null}
-      <Pager pager={vm.exPager} scrollTarget=".mw-card" />
+      <TableFooter pager={vm.exPager} scrollTarget=".mw-card">
+        <AnalyticsDropdown control={vm.mw?.tdd?.vtype} />
+      </TableFooter>
     </section>
   );
 }

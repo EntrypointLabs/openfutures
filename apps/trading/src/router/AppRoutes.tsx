@@ -13,6 +13,12 @@ const LiquidityPage = lazy(() =>
 const PropPage = lazy(() =>
   import("@/components/prop/PropPage").then((m) => ({ default: m.PropPage })),
 );
+const CopyPage = lazy(() =>
+  import("@/components/copy/CopyPage").then((m) => ({ default: m.CopyPage })),
+);
+const PointsPage = lazy(() =>
+  import("@/components/points/PointsPage").then((m) => ({ default: m.PointsPage })),
+);
 
 export function AppRoutes({ vm }: { vm: TerminalViewModel }) {
   usePageScroll();
@@ -26,6 +32,8 @@ export function AppRoutes({ vm }: { vm: TerminalViewModel }) {
           <Route path="/watch/:view?" element={<WatchRoute vm={vm} />} />
           <Route path="/liquidity/:view?" element={<LiquidityPage vm={vm} />} />
           <Route path="/prop" element={<PropPage vm={vm} />} />
+          <Route path="/copy/:trader?" element={<CopyPage vm={vm} />} />
+          <Route path="/points" element={<PointsPage vm={vm} />} />
           <Route path="/profile" element={trade} />
           <Route path="*" element={trade} />
         </Routes>

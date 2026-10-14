@@ -1,5 +1,5 @@
 import { InfoTip } from "@/components/common/InfoTip";
-import { Pager } from "@/components/common/Pager";
+import { AnalyticsDropdown, TableFooter } from "@/components/analytics/controls";
 import { SnapshotButton } from "@/components/common/SnapshotButton";
 import type { TerminalViewModel } from "@/terminal/types";
 
@@ -14,17 +14,9 @@ export function FundedTradersCard({ vm }: { vm: TerminalViewModel }) {
             Funded Traders
             <InfoTip tip="Every account the vaults fund" />
           </h2>
+          <p>Accounts funded by the vaults, ranked by account size.</p>
         </div>
         <SnapshotButton onClick={vm.mw?.snap} />
-      </div>
-      <div className="wfilter">
-        <div className="mwc-seg" role="group" aria-label="Sort">
-          {liq.traderSorts.map((sort, i) => (
-            <button key={i} type="button" className={sort.cls} onClick={sort.pick}>
-              {sort.label}
-            </button>
-          ))}
-        </div>
       </div>
       <div className="lq-scroll">
         <div className="pv-table num" role="table" aria-label="Funded traders">
@@ -32,13 +24,7 @@ export function FundedTradersCard({ vm }: { vm: TerminalViewModel }) {
             <span role="columnheader">
               <span className="rk">#</span>Trader
             </span>
-            <span role="columnheader">Account (USD)</span>
-            <span role="columnheader">PnL (%)</span>
-            <span role="columnheader" className="th-i">
-              Drawdown Used (%)
-              <InfoTip tip="How much of the 10% maximum loss the trader has used" />
-            </span>
-            <span role="columnheader">Days</span>
+            {liq.traderHeads.map((head) => <span key={head.label} role="columnheader" aria-sort={head.sortDir}><button type="button" className={head.cls} onClick={head.pick}>{head.label}<i aria-hidden="true">{head.arrow}</i></button></span>)}
             <span role="columnheader">Status</span>
           </div>
           {liq.traders.map((trader, i) => (
@@ -65,7 +51,7 @@ export function FundedTradersCard({ vm }: { vm: TerminalViewModel }) {
           ))}
         </div>
       </div>
-      <Pager pager={liq.tradersPager} />
+      <TableFooter pager={liq.tradersPager}><AnalyticsDropdown control={liq.traderSizeControl} /></TableFooter>
     </section>
   );
 }

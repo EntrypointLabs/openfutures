@@ -5,6 +5,8 @@ const PAGE_NAMES: Record<string, string> = {
   watch: "Market Watch",
   liquidity: "Liquidity",
   prop: "Prop",
+  copy: "Copy",
+  points: "Points",
 };
 
 export function PageFallback({ screen }: { screen: string }) {

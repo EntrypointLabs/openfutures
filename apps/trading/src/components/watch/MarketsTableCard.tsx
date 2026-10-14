@@ -1,7 +1,6 @@
 import { Fragment } from "react";
-import { Dropdown } from "@/components/common/Dropdown";
+import { AnalyticsDropdown, TableFooter } from "@/components/analytics/controls";
 import { InfoTip } from "@/components/common/InfoTip";
-import { Pager } from "@/components/common/Pager";
 import { SnapshotButton } from "@/components/common/SnapshotButton";
 import { MarketsTable } from "@/components/watch/MarketsTable";
 import { WatchEmpty, WatchSearch } from "@/components/watch/WatchSearch";
@@ -16,17 +15,14 @@ export function MarketsTableCard({ vm }: { vm: TerminalViewModel }) {
       <div className="mw-card-h">
         <div>
           <h2 className="h-i">
-            All Markets
+            Markets
             <InfoTip tip="Every perpetual market across venues. Sort by any column and tap a row for its details." />
           </h2>
           <p>{vm.mwTableSub?.markets}</p>
         </div>
-        <SnapshotButton onClick={vm.mw?.snap} />
-      </div>
-      <div className="mw-card-tools">
-        <div className="wfilter">
-          <Dropdown dd={vm.mw?.dd?.mcat} />
+        <div className="mw-card-a">
           <WatchSearch label="Search markets" value={vm.wq} onChange={vm.onWq} />
+          <SnapshotButton onClick={vm.mw?.snap} />
         </div>
       </div>
       <MarketsTable vm={vm} />
@@ -84,7 +80,9 @@ export function MarketsTableCard({ vm }: { vm: TerminalViewModel }) {
       {vm.noW ? (
         <WatchEmpty title="No markets match">Try a ticker like ETH, US500 or Gold.</WatchEmpty>
       ) : null}
-      <Pager pager={vm.wrowsPager} scrollTarget=".mw-card" />
+      <TableFooter pager={vm.wrowsPager} scrollTarget=".mw-card">
+        <AnalyticsDropdown control={vm.mw?.tdd?.mcat} />
+      </TableFooter>
     </section>
   );
 }
