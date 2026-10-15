@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { defineConfig } from 'vite'
 
-const pages = ['index', 'contact', 'terms-and-conditions', 'privacy-policy', 'waitlist', 'waitlist/dashboard', '404']
+const pages = ['index', 'contact', 'terms-and-conditions', 'privacy-policy', '404']
 
 // Serves /contact from contact.html and unknown paths from 404.html, the way the deployed site does.
 function cleanUrls() {
