@@ -1,0 +1,993 @@
+/* Waitlist preview: the marketing site's grid, pixel type and stepped panels. */
+:root {
+  color-scheme: dark;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: #0d0d0d;
+  color: #f5f5f4;
+  font:
+    400 16px/1.5 "Geist",
+    sans-serif;
+}
+button,
+input {
+  font: inherit;
+}
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+a {
+  color: inherit;
+}
+button {
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+[hidden] {
+  display: none !important;
+}
+:focus-visible {
+  outline: 2px solid #6f97ff;
+  outline-offset: 5px;
+}
+.wl {
+  --muted: #969694;
+  --line: #2e2e2e;
+  --blue: #2d63f5;
+  min-height: 100vh;
+}
+.wl-skip {
+  position: fixed;
+  top: -100px;
+  left: 16px;
+  z-index: 30;
+  padding: 12px;
+  background: #f5f5f4;
+  color: #0d0d0d;
+}
+.wl-skip:focus {
+  top: 60px;
+}
+.wl-header {
+  height: 84px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 0 5%;
+}
+.wl-home {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  text-decoration: none;
+  font:
+    12px "Geist Mono",
+    monospace;
+  text-transform: uppercase;
+}
+.wl-home of-logo {
+  width: 20px;
+  height: 20px;
+}
+.wl-home svg {
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
+}
+.wl .framer-3sfwr9-container a[aria-current="page"] {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.wl-preview {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-left: 28px;
+  padding-left: 28px;
+  border-left: 1px solid var(--line);
+  font:
+    10px "Geist Mono",
+    monospace;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+.wl-dot {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  background: #6f97ff;
+}
+.wl-hero {
+  position: relative;
+  padding: 82px 5% 88px;
+  border-block: 1px solid var(--line);
+  background-image:
+    linear-gradient(#ffffff07 1px, transparent 1px),
+    linear-gradient(90deg, #ffffff07 1px, transparent 1px);
+  background-size: 80px 80px;
+  overflow: hidden;
+}
+.wl-grid {
+  position: relative;
+  max-width: 1152px;
+  margin: auto;
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 88px;
+  align-items: center;
+  z-index: 1;
+}
+.wl-eyebrow {
+  margin: 0 0 28px;
+  font:
+    11px "Geist Mono",
+    monospace;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.wl-h1 {
+  margin: 0 0 28px;
+  font-size: clamp(60px, 7.3vw, 106px);
+  font-weight: 400;
+  letter-spacing: -0.075em;
+  line-height: 0.98;
+}
+.wl-h1 span {
+  display: table;
+  padding: 0 14px 6px;
+  background: #f5f5f4;
+  color: #0d0d0d;
+}
+.wl-h1 .wl-pixel {
+  font-family: "Geist Pixel", "Geist Pixel Square", monospace;
+  letter-spacing: -0.055em;
+  margin-left: 40px;
+  padding-bottom: 0;
+}
+.wl-intro {
+  max-width: 410px;
+  margin: 0 0 32px;
+  color: #d4d4d2;
+  font-size: 17px;
+}
+.wl-intro strong {
+  color: #f5f5f4;
+  font-weight: 500;
+}
+.wl-step-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  color: var(--muted);
+  font:
+    10px "Geist Mono",
+    monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.wl-step-line b {
+  color: #f5f5f4;
+  font-weight: 400;
+}
+.wl-corner {
+  position: absolute;
+  width: 280px;
+  height: 180px;
+  top: 0;
+  right: -80px;
+  background: linear-gradient(120deg, #2d63f5, #a9c1ff);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 64% 100%, 64% 67%, 32% 67%, 32% 33%, 0 33%);
+  opacity: 0.65;
+}
+.wl-card {
+  background: #161616;
+  border: 1px solid var(--line);
+  padding: 32px;
+  box-shadow:
+    10px 10px 0 #0d0d0d,
+    11px 11px 0 var(--line);
+}
+.wl-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px dashed #3a3a3a;
+  padding-bottom: 20px;
+  margin-bottom: 24px;
+}
+.wl-card-head p {
+  font:
+    11px "Geist Mono",
+    monospace;
+  margin: 0;
+  text-transform: uppercase;
+}
+.wl-card-head of-logo {
+  width: 28px;
+  height: 28px;
+}
+.wl-card-head svg {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  fill: #f5f5f4;
+}
+.wl-card h2 {
+  font-size: 25px;
+  line-height: 1.2;
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  margin: 0 0 10px;
+}
+.wl-card-copy {
+  color: var(--muted);
+  margin: 0 0 24px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.wl-field {
+  display: block;
+  margin: 0 0 18px;
+}
+.wl-field span {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+.wl-field input {
+  width: 100%;
+  background: #0d0d0d;
+  color: #f5f5f4;
+  border: 1px solid #353535;
+  border-radius: 0;
+  padding: 13px 14px;
+  min-height: 48px;
+  transition: border-color 0.15s;
+}
+.wl-field input:focus {
+  border-color: #6f97ff;
+  outline: 1px solid #6f97ff;
+  outline-offset: 0;
+}
+.wl-field input::placeholder {
+  color: #6a6a68;
+}
+.wl-field small {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 6px;
+}
+.wl-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border: 1px solid #f5f5f4;
+  padding: 13px 17px;
+  min-height: 48px;
+  background: #f5f5f4;
+  color: #0d0d0d;
+  font:
+    12px "Geist Mono",
+    monospace;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+.wl-btn:hover {
+  background: #c9c9c7;
+}
+.wl-btn-full {
+  width: 100%;
+}
+.wl-btn-ghost {
+  background: transparent;
+  color: #f5f5f4;
+  border-color: #3a3a3a;
+}
+.wl-btn-ghost:hover {
+  background: #242424;
+}
+.wl-text-btn {
+  background: none;
+  border: 0;
+  color: #d4d4d2;
+  padding: 4px 0;
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.wl-switch {
+  margin: 18px 0 0;
+  text-align: center;
+  color: var(--muted);
+  font-size: 12px;
+}
+.wl-legal {
+  margin: 18px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.6;
+}
+.wl-error {
+  color: #ff8c95;
+  font-size: 12px;
+  margin: 0 0 12px;
+}
+.wl-referrer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 20px;
+  padding: 10px 12px;
+  font-size: 12px;
+  border: 1px solid #2d63f566;
+  background: #2d63f511;
+  color: #a9c1ff;
+}
+.wl-code-input {
+  font-family: "Geist Mono", monospace !important;
+  font-size: 24px !important;
+  letter-spacing: 0.5em;
+  text-align: center;
+}
+.wl-code-help {
+  background: #0d0d0d;
+  border-left: 2px solid #6f97ff;
+  padding: 12px 14px;
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 20px;
+}
+.wl-code-help b {
+  color: #f5f5f4;
+  font-family: "Geist Mono", monospace;
+  letter-spacing: 0.1em;
+}
+.wl-verify-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 18px;
+}
+.wl-how {
+  max-width: 1152px;
+  margin: 0 auto;
+  padding: 52px 0 70px;
+}
+.wl-section-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font:
+    11px "Geist Mono",
+    monospace;
+  text-transform: uppercase;
+  margin-bottom: 24px;
+  color: var(--muted);
+}
+.wl-process {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-block: 1px solid var(--line);
+}
+.wl-process article {
+  padding: 28px 32px 32px 0;
+}
+.wl-process article + article {
+  padding-left: 32px;
+  border-left: 1px solid var(--line);
+}
+.wl-process .wl-number {
+  color: var(--muted);
+  font:
+    11px "Geist Mono",
+    monospace;
+}
+.wl-process h3 {
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: -0.04em;
+  margin: 20px 0 8px;
+}
+.wl-process p {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 0;
+  max-width: 285px;
+}
+.wl-note {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 20px 0 0;
+}
+.wl-bottom {
+  padding: 0 5%;
+}
+.wl-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  background: #f5f5f4;
+  color: #0d0d0d;
+  padding: 12px 20px;
+  max-width: calc(100% - 32px);
+  font-size: 13px;
+  box-shadow: 0 4px 24px #0008;
+}
+.wl-dash {
+  max-width: 1152px;
+  margin: auto;
+  padding: 52px 0 80px;
+}
+.wl-dash-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: flex-start;
+  margin-bottom: 32px;
+}
+.wl-dash-head .wl-eyebrow {
+  margin-bottom: 14px;
+}
+.wl-dash h1 {
+  font-size: clamp(36px, 5vw, 60px);
+  line-height: 1.08;
+  letter-spacing: -0.06em;
+  font-weight: 400;
+  margin: 0 0 10px;
+}
+.wl-dash-sub {
+  color: var(--muted);
+  font-size: 14px;
+  margin: 0;
+}
+.wl-member {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.wl-avatar {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  background: #2d63f522;
+  color: #a9c1ff;
+  border: 1px solid #2d63f555;
+  font:
+    14px "Geist Mono",
+    monospace;
+}
+.wl-member b {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+}
+.wl-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border: 1px solid var(--line);
+  margin-bottom: 24px;
+  background: #131313;
+}
+.wl-stat {
+  padding: 24px 28px;
+}
+.wl-stat + .wl-stat {
+  border-left: 1px solid var(--line);
+}
+.wl-stat dt {
+  font:
+    10px "Geist Mono",
+    monospace;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.wl-stat dd {
+  font-size: 40px;
+  line-height: 1.2;
+  margin: 12px 0 8px;
+  letter-spacing: -0.045em;
+  font-variant-numeric: tabular-nums;
+}
+.wl-stat dd.wl-status {
+  font-size: 23px;
+  line-height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.wl-stat p {
+  margin: 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+.wl-dashboard-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 24px;
+}
+.wl-share {
+  position: relative;
+  overflow: hidden;
+  background: #161616;
+  border: 1px solid var(--line);
+  padding: 28px;
+}
+.wl-share .wl-corner {
+  width: 180px;
+  height: 100px;
+  right: 0;
+  opacity: 0.25;
+}
+.wl-share h2 {
+  position: relative;
+  margin: 12px 0;
+  font-size: 33px;
+  font-weight: 400;
+  letter-spacing: -0.05em;
+}
+.wl-share p {
+  font-size: 13px;
+  color: var(--muted);
+  max-width: 340px;
+}
+.wl-code-label {
+  display: block;
+  margin-top: 28px;
+  font:
+    10px "Geist Mono",
+    monospace;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+.wl-referral-code {
+  display: block;
+  font:
+    25px "Geist Mono",
+    monospace;
+  letter-spacing: 0.12em;
+  margin: 8px 0 20px;
+}
+.wl-link-row {
+  display: flex;
+}
+.wl-link-row input {
+  min-width: 0;
+  width: 100%;
+  background: #0d0d0d;
+  border: 1px solid #3a3a3a;
+  padding: 12px;
+  color: #d4d4d2;
+  font:
+    11px "Geist Mono",
+    monospace;
+  border-right: 0;
+  border-radius: 0;
+}
+.wl-link-row .wl-btn {
+  flex: none;
+}
+.wl-social {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+.wl-social a {
+  flex: 1;
+  justify-content: center;
+}
+.wl-share .wl-note {
+  font-size: 11px;
+}
+.wl-activity {
+  border: 1px solid var(--line);
+  background: #131313;
+}
+.wl-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--line);
+}
+.wl-panel-head h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+}
+.wl-tag {
+  font:
+    9px "Geist Mono",
+    monospace;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.wl-empty {
+  padding: 35px 24px;
+}
+.wl-empty-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #3a3a3a;
+  color: var(--muted);
+  font:
+    20px "Geist Mono",
+    monospace;
+  margin-bottom: 16px;
+}
+.wl-empty h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 400;
+}
+.wl-empty p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+.wl-activity-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 24px;
+  border-bottom: 1px solid #242424;
+  font-size: 12px;
+}
+.wl-activity-row span {
+  color: var(--muted);
+}
+.wl-demo-controls {
+  padding: 16px 24px;
+  border-top: 1px dashed var(--line);
+}
+.wl-demo-controls summary {
+  color: var(--muted);
+  font-size: 11px;
+  cursor: pointer;
+}
+.wl-demo-controls p {
+  color: var(--muted);
+  font-size: 11px;
+}
+.wl-demo-controls .wl-btn {
+  min-height: 36px;
+  padding: 8px 12px;
+  font-size: 10px;
+}
+.wl-board {
+  margin-top: 24px;
+  border: 1px solid var(--line);
+  background: #131313;
+}
+.wl-board table {
+  border-collapse: collapse;
+  width: 100%;
+  text-align: left;
+  font-size: 13px;
+}
+.wl-board th {
+  color: var(--muted);
+  font:
+    10px "Geist Mono",
+    monospace;
+  text-transform: uppercase;
+  padding: 15px 24px;
+  border-bottom: 1px solid var(--line);
+}
+.wl-board td {
+  padding: 14px 24px;
+  border-bottom: 1px solid #242424;
+}
+.wl-board th:last-child,
+.wl-board td:last-child {
+  text-align: right;
+}
+.wl-board td:first-child {
+  color: var(--muted);
+  width: 80px;
+  font-family: "Geist Mono", monospace;
+}
+.wl-board .wl-you {
+  background: #2d63f514;
+}
+.wl-you-label {
+  color: #a9c1ff;
+  font:
+    9px "Geist Mono",
+    monospace;
+  margin-left: 10px;
+}
+.wl-board-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 24px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.wl-board-foot .wl-text-btn {
+  white-space: nowrap;
+}
+.wl-storage-note {
+  background: #2d63f511;
+  border: 1px solid #2d63f555;
+  color: #a9c1ff;
+  padding: 12px;
+  font-size: 12px;
+  margin-bottom: 20px;
+}
+.wl-loading {
+  padding: 90px 5%;
+  text-align: center;
+  color: var(--muted);
+}
+@media (min-width: 1450px) {
+  .wl-hero {
+    padding-top: 110px;
+    padding-bottom: 110px;
+  }
+}
+@media (max-width: 1050px) {
+  .wl-grid {
+    gap: 40px;
+  }
+  .wl-h1 {
+    font-size: 76px;
+  }
+  .wl-how,
+  .wl-dash {
+    margin-inline: 5%;
+  }
+}
+@media (max-width: 760px) {
+  .wl-header {
+    height: 72px;
+    padding-right: 20px;
+  }
+  .wl-home > span:not(.wl-brand-mark) {
+    display: none;
+  }
+  .wl-preview {
+    margin-left: 16px;
+    padding-left: 16px;
+    font-size: 8px;
+  }
+  .wl-hero {
+    padding: 48px 24px 48px;
+  }
+  .wl-grid {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+  .wl-h1 {
+    font-size: clamp(60px, 12vw, 88px);
+  }
+  .wl-h1 .wl-pixel {
+    margin-left: 24px;
+  }
+  .wl-intro {
+    font-size: 15px;
+  }
+  .wl-eyebrow {
+    margin-bottom: 20px;
+  }
+  .wl-corner {
+    width: 180px;
+    height: 100px;
+    opacity: 0.35;
+  }
+  .wl-card {
+    padding: 24px;
+    box-shadow:
+      6px 6px 0 #0d0d0d,
+      7px 7px 0 var(--line);
+  }
+  .wl-how {
+    padding: 36px 0 48px;
+  }
+  .wl-process {
+    grid-template-columns: 1fr;
+  }
+  .wl-process article {
+    padding: 24px 0;
+  }
+  .wl-process article + article {
+    padding: 24px 0;
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+  .wl-process h3 {
+    margin-top: 12px;
+  }
+  .wl-section-label {
+    font-size: 9px;
+  }
+  .wl-process p {
+    max-width: none;
+  }
+  .wl-dash {
+    padding: 30px 0 50px;
+  }
+  .wl-dash-head {
+    flex-direction: column;
+    gap: 20px;
+  }
+  .wl-member {
+    align-self: flex-end;
+  }
+  .wl-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .wl-stat {
+    padding: 20px;
+  }
+  .wl-stat:last-child {
+    grid-column: 1/-1;
+    border-top: 1px solid var(--line);
+    border-left: 0;
+  }
+  .wl-stat dd.wl-status {
+    line-height: 1.2;
+    font-size: 20px;
+  }
+  .wl-dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+  .wl-share {
+    padding: 24px;
+  }
+  .wl-share h2 {
+    font-size: 30px;
+  }
+  .wl-panel-head {
+    padding: 18px 20px;
+  }
+  .wl-board td,
+  .wl-board th {
+    padding: 14px 16px;
+  }
+  .wl-board td:first-child {
+    width: 50px;
+  }
+  .wl-board-foot {
+    flex-wrap: wrap;
+    padding: 16px;
+  }
+  .wl-link-row .wl-btn {
+    font-size: 10px;
+    padding-inline: 12px;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .wl-grid,
+  .wl-dash {
+    animation: wl-enter 0.55s ease-out both;
+  }
+  @keyframes wl-enter {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+/* React shell: the same white, stepped menu used by the marketing site. */
+.wl-brand-mark {
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
+}
+.wl-marketing-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 240px;
+  z-index: 30;
+  padding-bottom: 10px;
+  background: #f5f5f4;
+  color: #0d0d0d;
+  clip-path: polygon(
+    0 0,
+    calc(100% - 32px) 0,
+    calc(100% - 32px) calc(100% - 24px),
+    calc(100% - 18px) calc(100% - 24px),
+    calc(100% - 18px) calc(100% - 10px),
+    100% calc(100% - 10px),
+    100% 100%,
+    0 100%
+  );
+}
+.wl-menu-toggle {
+  width: 100%;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 40px;
+  background: transparent;
+  border: 0;
+  color: #0d0d0d;
+  text-transform: uppercase;
+  font:
+    12px "Geist Mono",
+    monospace;
+}
+.wl-menu-toggle span {
+  font:
+    20px "Geist",
+    sans-serif;
+  width: 18px;
+}
+.wl-marketing-menu nav {
+  border-top: 1px dashed #333;
+  padding: 14px 30px 10px 40px;
+}
+.wl-marketing-menu nav a {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 6px 0;
+  color: #0d0d0d;
+  text-decoration: none;
+  font-size: 15px;
+}
+.wl-marketing-menu nav a span {
+  color: #666;
+  font:
+    10px "Geist Mono",
+    monospace;
+}
+.wl-marketing-menu nav a:hover,
+.wl-marketing-menu nav a[aria-current] {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.wl-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 25;
+  background: #000b;
+  border: 0;
+  width: 100%;
+  height: 100%;
+}
+@media (max-width: 809px) {
+  .wl-marketing-menu {
+    width: 172px;
+  }
+  .wl-menu-toggle {
+    padding-inline: 24px;
+  }
+  .wl-marketing-menu nav {
+    padding-inline: 20px;
+  }
+  .wl-marketing-menu nav a {
+    gap: 12px;
+  }
+}

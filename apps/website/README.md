@@ -33,3 +33,10 @@ Pages use clean URLs (`/contact`, not `/contact.html`). The dev and preview serv
 ## Contact form
 
 The form does not send anywhere yet. Set `data-endpoint` on the `<form>` in `contact.html` to a URL that accepts a JSON `POST` (`name`, `email`, `Topic`, `message`). Without it, submitting shows the error state.
+
+## Waitlist app
+
+The waitlist is a separate Vite + React workspace at `apps/waitlist`. The website menu links
+to port 5175 during development. Set `VITE_WAITLIST_URL` to its actual URL when deploying;
+the production fallback is `https://waitlist.openfutures.xyz/`. Account and referral UI live
+entirely in that app. See [its README](../waitlist/README.md) for setup and preview instructions.

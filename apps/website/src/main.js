@@ -17,6 +17,7 @@ import { initCursorImageTrail } from './behaviors/cursor-image-trail.js'
 import { initGlassSurfaces } from './behaviors/glass-surface.js'
 import { initContactForm } from './behaviors/contact-form.js'
 import { initVenueFlow } from './behaviors/venue-flow.js'
+import { initWaitlistNav } from './behaviors/waitlist-nav.js'
 
 defineLogoElement()
 initTypewriterBoxes()
@@ -27,6 +28,7 @@ initParallax()
 initAppearEffects()
 initTickers()
 initSlideshows()
+initWaitlistNav()
 initNavbar()
 initAccordions()
 initBlindsTextReveal()
