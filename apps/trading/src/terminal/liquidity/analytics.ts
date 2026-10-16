@@ -113,7 +113,7 @@ export function liquidityKpis(vaults: VaultSnapshot[]) {
       info: "Deposits not yet allocated to funded traders",
       k: "Available Liquidity",
       v: usd(deposits - allocated),
-      sub: pct(deposits - allocated) + " of deposits",
+      sub: usd(allocated) + " funding traders, " + pct(allocated) + " utilization",
     },
     {
       info: "Capital currently allocated to funded accounts",
@@ -371,10 +371,10 @@ export function traderReturns(hover: ChartHover | null, handlers: HoverFactory) 
       };
     }),
     zeroX: xOf(0).toFixed(1),
-    xTicks: [-8, -4, 0, 4, 8, 12].map((percent) => ({
+    xTicks: [-8, -4, 0, 4, 8, 12].map((percent, index) => ({
       x: (xOf(percent) / 10).toFixed(2),
       label: (percent > 0 ? "+" : "") + percent + "%",
-      cls: percent === 12 ? "last" : "",
+      cls: (percent === -8 ? "first" : percent === 12 ? "last" : "") + (index === 0 || index === 2 || index === 5 ? " t4" : index === 4 ? " t1" : " t2"),
     })),
     yTicks: [0, 0.5, 1].map((fraction) => ({
       y: yPercent(BASELINE - fraction * USABLE_H),

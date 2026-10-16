@@ -214,7 +214,8 @@ export class Terminal extends Store<AppProps, TerminalState> {
         !img ||
         img.hasAttribute("data-venue") ||
         img.closest("#share-card") ||
-        img.closest(".asd-head")
+        img.closest(".asd-head") ||
+        img.closest(".copy-position[aria-haspopup='dialog']")
       ) {
         return null;
       }

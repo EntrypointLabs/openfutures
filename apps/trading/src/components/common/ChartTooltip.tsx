@@ -20,16 +20,20 @@ export interface ChartTooltipModel {
 export function ChartTooltip({
   tip,
   head,
+  cursor = true,
 }: {
   tip?: ChartTooltipModel;
   head: (string | number | undefined)[];
+  cursor?: boolean;
 }) {
   if (!tip?.show) {
     return null;
   }
   return (
     <>
-      <i className="mwc-vline" style={parseStyle(`left: ${tip.vline ?? tip.left ?? ""}%`)} />
+      {cursor ? (
+        <i className="mwc-vline" style={parseStyle(`left: ${tip.vline ?? tip.left ?? ""}%`)} />
+      ) : null}
       <div
         className={`${tip.side ?? ""} mwc-tip num`}
         style={parseStyle(`left: ${tip.left ?? ""}%`)}

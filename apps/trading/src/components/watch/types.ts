@@ -1,5 +1,6 @@
 /** Shapes of the Market Watch view-model values, which the inferred vm types as `any`. */
 import type { PointerEvent } from "react";
+import type { AnalyticsDropdownControl } from "@/components/analytics/controls";
 import type { ChartTooltipModel } from "@/components/common/ChartTooltip";
 import type { IconToggleItem } from "@/components/common/IconToggle";
 import type { PagerModel } from "@/components/common/Pager";
@@ -41,6 +42,11 @@ export interface MarketRow {
   price?: string;
   dir?: string;
   chgText?: string;
+  chgN?: string;
+  volN?: string;
+  oiN?: string;
+  fundN?: string;
+  topTextN?: string;
   spark?: string;
   sparkColor?: string;
   vol?: string;
@@ -190,6 +196,7 @@ export interface PerfRow {
 }
 
 export interface Perf {
+  per?: AnalyticsDropdownControl;
   ranges?: Toggle[];
   yTicks?: Tick[];
   xTicks?: Tick[];
@@ -270,7 +277,17 @@ export interface ExchangeCard {
   top?: string;
 }
 
-export interface ExchangeRow {
+export interface ExchangeRow extends ExchangeCard {
+  oi?: string;
+  isOpen?: boolean;
+  groupCls?: string;
+  toggle?: Handler;
+  host?: string;
+  d30?: string;
+  d30Cls?: string;
+  shareN?: string;
+  turnN?: string;
+  liqN?: string;
   num?: string;
   logo?: string;
   name?: string;
@@ -309,6 +326,10 @@ export interface CarryItem {
 }
 
 export interface FundingRow {
+  isOpen?: boolean;
+  openCls?: string;
+  toggle?: Handler;
+  carry?: string;
   num?: string;
   logo?: string;
   sym?: string;

@@ -2,7 +2,7 @@ import type { buildViewModel } from "./viewModel";
 
 export type TerminalViewModel = ReturnType<typeof buildViewModel>;
 
-export type Screen = "home" | "detail" | "watch" | "prop" | "liquidity" | "profile";
+export type Screen = "home" | "detail" | "watch" | "prop" | "liquidity" | "copy" | "points" | "profile";
 
 /** Initial UI state, mainly used to deep-link into a screen or to script the app in tests. */
 export interface AppProps {

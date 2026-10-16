@@ -6,6 +6,8 @@ import { aprOnDay, type VaultSnapshot } from "@/terminal/liquidity/vaults";
 export interface LiquidityBook {
   lots: VaultLot[];
   log: VaultActivity[];
+  /** Net USDC moved into or out of the existing trading balance in this session. */
+  cashDelta?: number;
 }
 
 /** The signed-in depositor's starting book, built from the seed data relative to `today`. */

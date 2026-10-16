@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, type ReactNode } from "react";
 import { scrollBehavior } from "@/components/common/motion";
 
 /** Page controls as produced by the view model's `paginate`. */
@@ -13,7 +13,17 @@ export interface PagerModel {
 }
 
 /** Table pager (`.pgx`); with `scrollTarget`, a page change scrolls that ancestor back into view. */
-export function Pager({ pager, scrollTarget }: { pager?: PagerModel; scrollTarget?: string }) {
+export function Pager({
+  pager,
+  scrollTarget,
+  compact = false,
+  children,
+}: {
+  pager?: PagerModel;
+  scrollTarget?: string;
+  compact?: boolean;
+  children?: ReactNode;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const turn = (go?: () => void) => () => {
     go?.();
@@ -32,8 +42,13 @@ export function Pager({ pager, scrollTarget }: { pager?: PagerModel; scrollTarge
       }
     });
   };
+  const numbers = pager?.nums || [];
+  const current = numbers.findIndex((page) => page.cur === "page");
+  const visible = new Set([0, 1, 2, 3, numbers.length - 1, current - 1, current, current + 1]);
+  let previous = -1;
   return (
     <div className="pgx num" ref={ref}>
+      {children ? <div className="ac-tfl">{children}</div> : null}
       <span className="pgx-t">{pager?.text}</span>
       <span className="pgx-c">
         <button
@@ -45,17 +60,27 @@ export function Pager({ pager, scrollTarget }: { pager?: PagerModel; scrollTarge
         >
           <Chevron d="m15 18-6-6 6-6" />
         </button>
-        {(pager?.nums || []).map((num, i) => (
-          <button
-            key={i}
-            type="button"
-            className={num.cls}
-            aria-current={num.cur === "page" ? "page" : undefined}
-            onClick={turn(num.go)}
-          >
-            {num.label}
-          </button>
-        ))}
+        {numbers.flatMap((num, index) => {
+          if (compact && !visible.has(index)) return [];
+          const gap = compact && previous >= 0 && index - previous > 1;
+          previous = index;
+          return [
+            gap ? (
+              <span key={`gap-${index}`} className="pgx-gap" aria-hidden="true">
+                …
+              </span>
+            ) : null,
+            <button
+              key={index}
+              type="button"
+              className={num.cls}
+              aria-current={num.cur === "page" ? "page" : undefined}
+              onClick={turn(num.go)}
+            >
+              {num.label}
+            </button>,
+          ];
+        })}
         <button
           type="button"
           className="pgx-a"

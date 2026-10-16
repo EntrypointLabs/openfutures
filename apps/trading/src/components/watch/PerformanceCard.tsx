@@ -1,6 +1,6 @@
 import { Fragment } from "react";
 import { ChartTooltip } from "@/components/common/ChartTooltip";
-import { Dropdown } from "@/components/common/Dropdown";
+import { AnalyticsDropdown } from "@/components/analytics/controls";
 import { InfoTip } from "@/components/common/InfoTip";
 import { SnapshotButton } from "@/components/common/SnapshotButton";
 import { Watermark } from "@/components/common/Watermark";
@@ -19,25 +19,9 @@ export function PerformanceCard({ vm }: { vm: TerminalViewModel }) {
             Market Performance (%)
             <InfoTip tip="Price change of each market over the selected period. Tap a row in the table to show or hide its line." />
           </h2>
+          <p>Price change over time. Tap a market row to hide or show its line.</p>
         </div>
-        <div className="mw-card-a">
-          <Dropdown dd={vm.mw?.dd?.pfCat} />
-          <div className="mwc-seg" role="group" aria-label="Period">
-            {(perf?.ranges || []).map((range, i) => (
-              <Fragment key={i}>
-                <button
-                  type="button"
-                  className={range?.cls}
-                  aria-pressed={range?.pressed}
-                  onClick={range?.pick}
-                >
-                  {range?.label}
-                </button>
-              </Fragment>
-            ))}
-          </div>
-          <SnapshotButton onClick={vm.mw?.snap} />
-        </div>
+        <SnapshotButton onClick={vm.mw?.snap} />
       </div>
       <div className="pf-body">
         <div className="pf-chart">
@@ -148,9 +132,9 @@ export function PerformanceCard({ vm }: { vm: TerminalViewModel }) {
           ))}
         </div>
       </div>
-      <div className="mw-card-f">
-        <span>Hover to highlight. Tap a row to hide or show its line.</span>
-        <span>{perf?.asOf}</span>
+      <div className="ac-f ac-pf">
+        <AnalyticsDropdown control={perf?.per} />
+        <span className="ac-asof">{perf?.asOf}</span>
       </div>
     </section>
   );

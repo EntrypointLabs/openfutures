@@ -11,6 +11,7 @@ export const ROUTED_KEYS = [
   "wview",
   "watchOpen",
   "lqView",
+  "cpOpen",
   "account",
   "profile",
 ] as const;
@@ -66,6 +67,15 @@ function matchRoute(pathname: string, search: string): RouteState | null {
     }
     case "prop":
       return param ? null : { screen: "prop", account: "prop" };
+    case "copy": {
+      try {
+        return { screen: "copy", cpOpen: param ? decodeURIComponent(param) : null };
+      } catch {
+        return null;
+      }
+    }
+    case "points":
+      return param ? null : { screen: "points" };
     case "profile":
       return param ? null : { screen: "profile", profile: true };
     default:
@@ -96,6 +106,10 @@ function pageUrl(state: TerminalState, isMobile: boolean): string {
       return state.lqView === "analytics" ? "/liquidity/analytics" : "/liquidity";
     case "prop":
       return state.account === "prop" ? "/prop" : isMobile ? "/" : trade;
+    case "copy":
+      return state.cpOpen ? "/copy/" + encodeURIComponent(state.cpOpen) : "/copy";
+    case "points":
+      return "/points";
     case "profile":
       return isMobile || state.profile ? "/profile" : trade;
     default:
@@ -113,6 +127,8 @@ export function titleFromState(state: TerminalState, isMobile: boolean): string 
     watch: "Market Watch",
     liquidity: "Liquidity",
     prop: "Prop",
+    copy: "Copy",
+    points: "Points",
     profile: "Profile",
   };
   return (page[state.screen as Screen] || "Trade") + " · OpenFutures";

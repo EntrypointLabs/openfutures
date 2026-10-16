@@ -1,0 +1,106 @@
+/* ---- v121 Allium cards: banded header, quiet chart, every control in the card's own footer ---- */
+.ac-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin:0 0 18px}
+.ac-grid > .mw-card{display:flex;flex-direction:column;margin:0;min-width:0}
+.page-watch .mw-card-h,.page-liq .mw-card-h,.page-pts .mw-card-h{background:color-mix(in srgb, var(--c-up) 7%, var(--raised));padding:16px 20px;border-bottom:1px solid var(--line-2)}
+.page-watch .mw-card-h h2,.page-liq .mw-card-h h2,.page-pts .mw-card-h h2{font-size:17px;font-weight:500;letter-spacing:-0.01em}
+.page-watch .mw-card-h p,.page-liq .mw-card-h p,.page-pts .mw-card-h p{margin:4px 0 0;font-size:13.5px;color:var(--text-3)}
+.ac-b{flex:1;min-width:0;padding:22px 20px 0 8px}
+.ac-plot{display:grid;grid-template-columns:58px minmax(0,1fr);height:300px}
+.ac-y{position:relative}
+.ac-y span{position:absolute;right:10px;transform:translateY(-50%);font-size:12px;color:var(--text-2);white-space:nowrap}
+.ac-area{position:relative;min-width:0;border-left:1px solid var(--line-3);border-bottom:1px solid var(--line-3)}
+.ac-gh{position:absolute;inset:0;pointer-events:none}
+.ac-gh i{position:absolute;left:0;right:0;border-top:1px solid var(--line-1)}
+.ac-gh b{position:absolute;top:0;bottom:0;border-left:1px solid var(--line-1)}
+.ac-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.ac-band{fill:var(--hover)}
+.ac-area .wm{opacity:.35}
+.ac-x{position:relative;height:30px;margin-left:58px}
+.ac-x span{position:absolute;top:10px;transform:translateX(-50%);font-size:12.5px;color:var(--text-2);white-space:nowrap}
+.ac-x span.first{transform:none}
+.ac-x span.last{transform:translateX(-100%)}
+.ac-f{display:flex;align-items:center;flex-wrap:wrap;gap:10px 16px;padding:14px 20px 18px}
+.ac-dd{position:relative;flex:none}
+.ac-btn{display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 10px 0 12px;font-size:14px;font-weight:500}
+.ac-btn > svg:first-child{color:var(--text-3)}
+.ac-dd .dd-opt{min-height:40px;font-size:14px}
+.ac-seg{display:inline-flex;flex:none;gap:2px;padding:3px;border:1px solid var(--line-3);border-radius:4px;background:var(--surface)}
+.ac-seg button{display:inline-grid;place-items:center;min-width:32px;height:30px;padding:0 8px;border:0;border-radius:4px;background:none;color:var(--text-2);font-size:13px;font-weight:600}
+.ac-seg button.is-on{background:color-mix(in srgb, var(--c-up) 18%, transparent);color:var(--up)}
+@media (hover: hover) and (pointer: fine){.ac-seg button:not(.is-on):hover{color:var(--text)}.ac-lgi:hover{color:var(--text)}}
+.ac-lg{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;flex:1;min-width:0}
+.ac-lgi,.ac-lg-static span{display:inline-flex;align-items:center;gap:7px;padding:2px 0;border:0;background:none;color:var(--text);font-size:14px;white-space:nowrap}
+.ac-lgi i,.ac-lg-static i{display:block;flex:none;width:10px;height:10px;border-radius:2px}
+.ac-lgi .logo{width:16px;height:16px}
+.ac-lgi.is-off{opacity:.38}
+.ac-pf{display:flex;justify-content:space-between}
+.ac-asof{font-size:12.5px;color:var(--text-3)}
+/* table footers: the table's own control on the left, pages on the right */
+.pgx .ac-tfl{display:flex;align-items:center;gap:8px;flex:none}
+.pgx .ac-tfl + .pgx-t{margin-right:auto}
+.pgx-gap{border-color:transparent !important;background:transparent !important;pointer-events:none;color:var(--text-3)}
+.pgx .ac-btn{height:36px;font-size:13.5px}
+@media (max-width:1099px){.ac-grid{grid-template-columns:minmax(0,1fr)}}
+@media (min-width:768px){.page-liq .lqx-one{display:block !important;margin-bottom:18px}}
+@media (max-width:767px){
+.ac-grid{gap:16px;margin:0 0 16px}
+.page-watch .mw-card-h,.page-liq .mw-card-h,.page-pts .mw-card-h{padding:14px}
+.page-watch .mw-card-h h2,.page-liq .mw-card-h h2,.page-pts .mw-card-h h2{font-size:16px}
+.page-watch .mw-card-h p,.page-liq .mw-card-h p,.page-pts .mw-card-h p{font-size:13px}
+.ac-b{padding:16px 12px 0 2px}
+.ac-plot{grid-template-columns:46px minmax(0,1fr);height:210px}
+.ac-y span{right:6px;font-size:11px}
+.ac-x{margin-left:46px}
+.ac-x span{font-size:11px}
+.ac-f{padding:10px 14px 16px;gap:10px 12px}
+.ac-lg{flex:1 1 100%;gap:8px 14px}
+.ac-lgi,.ac-lg-static span{font-size:13px}
+.ac-dd .dd-opt{min-height:52px;padding:0 12px;font-size:15px}
+.pgx{flex-wrap:wrap}
+.pgx .ac-tfl{flex:1 1 100%;justify-content:flex-start;margin:0 0 10px}
+.pgx:has(.ac-tfl):has(.pgx-c > .pgx-a:first-child:disabled):has(.pgx-c > .pgx-a:last-child:disabled){display:flex}
+.pgx:has(.ac-tfl) .pgx-c:has(> .pgx-a:first-child:disabled):has(> .pgx-a:last-child:disabled){display:none}
+.pgx:has(.pgx-c > .pgx-a:first-child:disabled):has(.pgx-c > .pgx-a:last-child:disabled) .ac-tfl{margin:0}
+.pgx .ac-btn{height:40px}
+.ac-pf{flex-direction:row !important;align-items:center;justify-content:space-between}
+}
+
+/* ---- v122 exact Allium: menus drop below and over the card, quiet buttons, bigger headers ---- */
+.ac-b{container-type:inline-size}
+@container (max-width:900px){.ac-x span.t1,.ac-gh b.t1{display:none}}
+@container (max-width:460px){.ac-x span.t2,.ac-gh b.t2{display:none}}
+.page-watch .mw-card-h,.page-liq .mw-card-h,.page-pts .mw-card-h{padding:18px 22px 17px}
+.page-watch .mw-card-h h2,.page-liq .mw-card-h h2,.page-pts .mw-card-h h2{font-size:19px;font-weight:500;letter-spacing:-0.015em}
+.page-watch .mw-card-h p,.page-liq .mw-card-h p,.page-pts .mw-card-h p{margin:5px 0 0;font-size:15px;line-height:1.4}
+.page-watch .mw-card-h .snap-btn,.page-liq .mw-card-h .snap-btn,.page-pts .mw-card-h .snap-btn{width:34px;height:34px;margin:-4px -6px 0 0;border-color:transparent;background:transparent;color:var(--text-2)}
+.page-watch .mw-card-h .snap-btn svg,.page-liq .mw-card-h .snap-btn svg,.page-pts .mw-card-h .snap-btn svg{width:18px;height:18px}
+@media (hover: hover) and (pointer: fine){.page-watch .mw-card-h .snap-btn:hover,.page-liq .mw-card-h .snap-btn:hover,.page-pts .mw-card-h .snap-btn:hover{background:var(--hover);color:var(--text)}}
+.ac-btn,.ac-btn.is-open{height:40px;gap:10px;padding:0 12px;background:var(--surface);border-color:var(--line-3);font-size:15px;font-weight:400;color:var(--text)}
+.ac-btn .dd-chev{width:16px;height:16px;color:var(--text-3)}
+.ac-btn.is-open .dd-chev{transform:none}
+.ac-seg{padding:3px}
+.ac-seg button{min-width:34px;height:32px}
+.pgx .ac-btn,.pgx .ac-btn.is-open{height:38px;font-size:14px}
+.ac-dd .dd-scrim{background:transparent;animation:none}
+.ac-dd .dd-menu{position:absolute;top:calc(100% + 8px);bottom:auto;left:0;right:auto;z-index:59;min-width:calc(100% + 44px);max-width:calc(100vw - 32px);max-height:min(320px,60dvh);padding:6px;border-radius:6px;border:1px solid var(--line-2);box-shadow:0 12px 32px rgba(0,0,0,0.5);animation:none}
+.ac-dd .dd-menu::before{content:none;display:none}
+.copy-chart-footer .ac-dd .dd-menu{left:auto;right:0}
+[data-theme="light"] .ac-dd .dd-menu{box-shadow:0 8px 24px rgba(16,24,40,0.12)}
+.ac-dd .dd-opt{min-height:42px;padding:0 12px;font-size:15px;font-weight:400;color:var(--text)}
+.ac-dd .dd-menu.ac-menu .dd-opt.is-on{background:color-mix(in srgb, var(--c-up) 16%, transparent);color:var(--up);font-weight:400}
+.ac-dd .dd-menu.ac-menu .dd-opt.is-on .dd-tick{color:var(--up)}
+.ac-dd .dd-opt + .dd-opt{margin-top:2px}
+.ac-lgi,.ac-lg-static span{font-size:15px}
+.ac-lgi .logo{width:18px;height:18px;border-radius:4px}
+.ac-lgi i,.ac-lg-static i{width:11px;height:11px}
+:is(.mw-card,.pt-card,.lq-card,.copy-hero,.copy-leaders,.copy-performance-slot):has(.ac-dd .dd-menu){overflow:visible;position:relative;z-index:40}
+.mw-card:has(.ac-dd .dd-menu) > .mw-card-h{border-radius:4px 4px 0 0}
+@media (max-width:767px){
+.page-watch .mw-card-h,.page-liq .mw-card-h,.page-pts .mw-card-h{padding:15px 14px 14px}
+.page-watch .mw-card-h h2,.page-liq .mw-card-h h2,.page-pts .mw-card-h h2{font-size:17px}
+.page-watch .mw-card-h p,.page-liq .mw-card-h p,.page-pts .mw-card-h p{font-size:14px}
+.ac-btn,.ac-btn.is-open{font-size:14px}
+.ac-dd .dd-opt{min-height:52px;font-size:15px}
+.ac-lgi,.ac-lg-static span{font-size:14px}
+.ac-lgi .logo{width:16px;height:16px}
+}

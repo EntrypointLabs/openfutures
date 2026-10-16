@@ -26,6 +26,9 @@ import { niceStep, seededPriceSeries, sparklinePath } from "@openfutures/core";
 import { renderShareCard, saveNodeSnapshot } from "@/lib/snapshot";
 import { DEFAULT_PANE_SIZES } from "@/terminal/layout";
 import { buildLiquidityViewModel } from "@/terminal/liquidity/viewModel";
+import { buildCopyViewModel } from "@/terminal/copy/viewModel";
+import { buildPointsViewModel } from "@/terminal/points/viewModel";
+import { enhanceWatchViewModel } from "@/terminal/watch/viewModel";
 
 const seriesCache = new Map<string, number[]>();
 
@@ -1109,6 +1112,7 @@ export function buildViewModel(terminal: Terminal) {
       drawer: "closed",
       profile: false,
       watchOpen: null,
+      cpOpen: null,
     });
   };
   const propTotalPnl = propEquity - accountSize;
@@ -1756,7 +1760,10 @@ export function buildViewModel(terminal: Terminal) {
   const fundingUnitHours = fundingUnit === "1h" ? 1 : fundingUnit === "8h" ? 8 : 8760;
   const fundingDecimals = fundingUnit === "apr" ? 1 : 4;
   const venueHeaders = VENUES.map((venue: any) => ({ name: venue.name, logo: venue.logo }));
-  const fundingMarkets = MARKETS.filter((market2) => marketMatches(market2, state.fq || ""))
+  const fundingMarkets = MARKETS.filter((market2) =>
+    marketMatches(market2, state.fq || "") &&
+    (!(state.fcat && state.fcat !== "all") || market2.cat === state.fcat),
+  )
     .slice()
     .sort((a, b) => getMarketStats2(b).w0.oi - getMarketStats2(a).w0.oi);
   const fundingMatrix = fundingMarkets.map((market2) => {
@@ -8972,6 +8979,21 @@ user: `
       self.setState({ hmAll: true });
     },
   };
+  enhanceWatchViewModel({ terminal: self, state, marketWatch, getMarketStats: getMarketStats2,
+    venueMeta, watchRows, exchangeRows: filteredExchanges, fundingRows: fundingMatrix });
+  const copyViewModel = buildCopyViewModel(self, state, isMobile, {
+    availableBalance,
+    goTrade: (symbol: string) => makeSelectMarket(symbol)(),
+    showToast,
+  });
+  const pointsViewModel = buildPointsViewModel(self, state, isMobile, {
+    goTrade: makeNavigate(isMobile ? "home" : "detail"),
+    goLiquidity: makeNavigate("liquidity"),
+    goProp: () => {
+      self.setState({ account: "prop" });
+      makeNavigate("prop")();
+    },
+  });
   const marketsPaged = paginate("markets", watchRows);
   const venuesPaged = paginate("venues", filteredExchanges);
   const fundingPaged = paginate("funding", fundingMatrix);
@@ -8979,6 +9001,7 @@ user: `
     appCls:
       "app" + (state.dragging === "dock" ? " is-dragging-v" : state.dragging ? " is-dragging" : ""),
     screen: state.screen,
+    pageTitle: ({ watch: "Market Watch", liquidity: "Liquidity", copy: "Copy", points: "Points" } as Record<string, string>)[state.screen] || "",
     sheet: state.sheet,
     drawer: state.drawer,
     drawerOpen: state.drawer === "open" ? "true" : "false",
@@ -9230,12 +9253,15 @@ user: `
       trade: state.screen === "detail" || state.screen === "home" ? "is-active" : "",
       prop: state.screen === "prop" ? "is-active" : "",
       profile: state.screen === "profile" ? "is-active" : "",
+      copy: state.screen === "copy" ? "is-active" : "",
     },
     navItems: [
       ["detail", "Trade"],
       ["prop", "Prop"],
+      ["copy", "Copy"],
       ["watch", "Market Watch"],
       ["liquidity", "Liquidity"],
+      ["points", "Points"],
     ]
       .filter((item) => item[0] !== "prop" || isPropAccount)
       .map((item) => {
@@ -9250,6 +9276,8 @@ user: `
       }),
     goWatch: makeNavigate("watch"),
     goLiquidity: makeNavigate("liquidity"),
+    goCopy: makeNavigate("copy"),
+    goPoints: makeNavigate("points"),
     goTrade: makeNavigate(isMobile ? "home" : "detail"),
     goHome: makeNavigate("home"),
     goProp: makeNavigate("prop"),
@@ -9311,6 +9339,8 @@ user: `
     noEx: filteredExchanges.length === 0,
     prop2: propViewModel,
     liq: liquidityViewModel,
+    cp: copyViewModel,
+    pts: pointsViewModel,
     wrowsP: marketsPaged.rows,
     wrowsPager: marketsPaged.pager,
     exListP: venuesPaged.rows,
