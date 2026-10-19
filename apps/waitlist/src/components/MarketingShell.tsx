@@ -66,7 +66,7 @@ export function MarketingShell({ children, toast }: { children: ReactNode; toast
         </a>
         <span className="wl-preview">
           <i className="wl-dot" />
-          UI Preview
+          Early access
         </span>
       </header>
       {children}

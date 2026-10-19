@@ -5,9 +5,10 @@
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/apps/website/src/styles/**",
-        "$TURBO_ROOT$/apps/website/public/**"
+        "$TURBO_ROOT$/apps/website/public/**",
+        ".env*"
       ],
-      "env": ["VITE_WEBSITE_URL"]
+      "env": ["VITE_WEBSITE_URL", "VITE_SUPABASE_URL", "VITE_SUPABASE_PUBLISHABLE_KEY"]
     }
   }
 }

@@ -1,21 +1,24 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { LogoMark } from "@openfutures/ui";
-import { DEMO_CODE, findCode } from "../preview";
-import type { Member, Pending, PreviewState } from "../preview";
+import type { Member, Pending } from "../contracts";
 import { websiteUrl } from "./MarketingShell";
 
 interface Props {
-  state: PreviewState;
   pending: Pending | null;
   member?: Member;
+  referrer: string | null;
+  profileRequired: boolean;
+  loading: boolean;
+  serviceError: string;
   signInInitially: boolean;
-  storageAvailable: boolean;
-  onStart: (email: string, username: string, signIn: boolean) => string;
-  onVerify: (code: string) => string;
+  onStart: (email: string, username: string, signIn: boolean) => Promise<string>;
+  onVerify: (code: string) => Promise<string>;
+  onComplete: (username: string) => Promise<string>;
+  onRetry: () => Promise<void>;
   onChangeEmail: () => void;
-  onResend: () => void;
-  onUseAnother: () => void;
+  onResend: () => Promise<string>;
+  onUseAnother: () => Promise<void>;
 }
 
 export function SignupPage(props: Props) {
@@ -24,7 +27,27 @@ export function SignupPage(props: Props) {
   const [username, setUsername] = useState(props.pending?.username || "");
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
-  const referrer = findCode(props.state, props.state.attribution?.code);
+  const [busy, setBusy] = useState(false);
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    if (!props.pending) return;
+    setNow(Date.now());
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [props.pending]);
+  const remaining = Math.max(0, Math.ceil(((props.pending?.sentAt ?? 0) + 60000 - now) / 1000));
+  async function run(action: () => Promise<string | void>) {
+    if (busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      setError((await action()) || "");
+    } catch {
+      setError("Unable to connect. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
   function switchMode() {
     setSignIn(!signIn);
     setError("");
@@ -67,12 +90,20 @@ export function SignupPage(props: Props) {
               <p>Your place starts here</p>
               <LogoMark size={28} />
             </div>
-            {!props.storageAvailable && (
-              <p className="wl-storage-note">
-                Browser storage is unavailable. Your preview will work for this visit, but won't be
-                saved.
-              </p>
+            {props.serviceError && (
+              <div className="wl-error" role="alert">
+                <p>{props.serviceError}</p>
+                <button
+                  disabled={busy || props.loading}
+                  className="wl-text-btn"
+                  type="button"
+                  onClick={() => void run(props.onRetry)}
+                >
+                  Try again
+                </button>
+              </div>
             )}
+            {busy && <p role="status">Please wait…</p>}
             {props.member ? (
               <>
                 <h2>You're already on the list.</h2>
@@ -84,10 +115,11 @@ export function SignupPage(props: Props) {
                 </Link>
                 <p className="wl-switch">
                   <button
+                    disabled={busy || props.loading}
                     className="wl-text-btn"
                     type="button"
                     onClick={() => {
-                      props.onUseAnother();
+                      void run(props.onUseAnother);
                       setError("");
                       setSignIn(false);
                     }}
@@ -96,19 +128,65 @@ export function SignupPage(props: Props) {
                   </button>
                 </p>
               </>
+            ) : props.loading ? (
+              <p role="status">Loading your waitlist…</p>
+            ) : props.profileRequired ? (
+              <>
+                <h2>Choose your username</h2>
+                <p className="wl-card-copy">
+                  Your email is verified. Finish joining to receive your referral link.
+                </p>
+                <form
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    void run(() => props.onComplete(username));
+                  }}
+                >
+                  <label className="wl-field">
+                    <span>Username</span>
+                    <input
+                      value={username}
+                      onChange={(event) => setUsername(event.target.value)}
+                      autoComplete="username"
+                      minLength={3}
+                      maxLength={24}
+                      pattern="[A-Za-z0-9_.-]{3,24}"
+                      required
+                    />
+                  </label>
+                  {error && (
+                    <p className="wl-error" role="alert">
+                      {error}
+                    </p>
+                  )}
+                  <button
+                    disabled={busy || props.loading}
+                    className="wl-btn wl-btn-full"
+                    type="submit"
+                  >
+                    Finish joining ↗
+                  </button>
+                </form>
+                <button
+                  disabled={busy || props.loading}
+                  className="wl-text-btn"
+                  type="button"
+                  onClick={() => void run(props.onUseAnother)}
+                >
+                  Use another account
+                </button>
+              </>
             ) : props.pending ? (
               <>
                 <h2>Check your inbox</h2>
                 <p className="wl-card-copy">
                   Enter the six-digit code for <strong>{props.pending.email}</strong> to continue.
                 </p>
-                <div className="wl-code-help">
-                  For this preview, use <b>{DEMO_CODE}</b>. No email is sent.
-                </div>
+                <p className="wl-code-help">Your code expires after 10 minutes.</p>
                 <form
                   onSubmit={(event) => {
                     event.preventDefault();
-                    setError(props.onVerify(code));
+                    void run(() => props.onVerify(code));
                   }}
                 >
                   <label className="wl-field">
@@ -134,12 +212,17 @@ export function SignupPage(props: Props) {
                       {error}
                     </p>
                   )}
-                  <button className="wl-btn wl-btn-full" type="submit">
+                  <button
+                    disabled={busy || props.loading}
+                    className="wl-btn wl-btn-full"
+                    type="submit"
+                  >
                     Verify &amp; continue <span aria-hidden="true">↗</span>
                   </button>
                 </form>
                 <div className="wl-verify-actions">
                   <button
+                    disabled={busy || props.loading}
                     className="wl-text-btn"
                     type="button"
                     onClick={() => {
@@ -153,12 +236,12 @@ export function SignupPage(props: Props) {
                   <button
                     className="wl-text-btn"
                     type="button"
+                    disabled={busy || props.loading || remaining > 0}
                     onClick={() => {
-                      props.onResend();
-                      setError("");
+                      void run(props.onResend);
                     }}
                   >
-                    Resend code
+                    {remaining ? `Resend in ${remaining}s` : "Resend code"}
                   </button>
                 </div>
               </>
@@ -170,16 +253,16 @@ export function SignupPage(props: Props) {
                     ? "Sign in with your email to find your referral link and progress."
                     : "Create your account to get a personal referral link and track your place."}
                 </p>
-                {!signIn && referrer && (
+                {!signIn && props.referrer && (
                   <p className="wl-referrer">
                     <i className="wl-dot" />
-                    <span>Invited by {referrer.username}</span>
+                    <span>Invited by {props.referrer}</span>
                   </p>
                 )}
                 <form
                   onSubmit={(event) => {
                     event.preventDefault();
-                    setError(props.onStart(email, username, signIn));
+                    void run(() => props.onStart(email, username, signIn));
                   }}
                 >
                   {!signIn && (
@@ -217,21 +300,29 @@ export function SignupPage(props: Props) {
                       {error}
                     </p>
                   )}
-                  <button className="wl-btn wl-btn-full" type="submit">
+                  <button
+                    disabled={busy || props.loading}
+                    className="wl-btn wl-btn-full"
+                    type="submit"
+                  >
                     {signIn ? "Send sign-in code" : "Join the waitlist"}{" "}
                     <span aria-hidden="true">↗</span>
                   </button>
                 </form>
                 <p className="wl-switch">
                   {signIn ? "New to OpenFutures?" : "Already on the list?"}{" "}
-                  <button className="wl-text-btn" type="button" onClick={switchMode}>
+                  <button
+                    disabled={busy || props.loading}
+                    className="wl-text-btn"
+                    type="button"
+                    onClick={switchMode}
+                  >
                     {signIn ? "Join the waitlist" : "Sign in"}
                   </button>
                 </p>
                 <p className="wl-legal">
                   Read our <a href={websiteUrl + "/terms-and-conditions"}>Terms</a> and{" "}
-                  <a href={websiteUrl + "/privacy-policy"}>Privacy Policy</a>. This is a UI preview;
-                  no email is sent.
+                  <a href={websiteUrl + "/privacy-policy"}>Privacy Policy</a>.
                 </p>
               </>
             )}

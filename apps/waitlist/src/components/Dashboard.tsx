@@ -1,27 +1,70 @@
-import { useRef, useState } from "react";
-import { leaderboard } from "../preview";
-import type { Member, PreviewState } from "../preview";
+import { useEffect, useRef, useState } from "react";
+import { api, message, RequestError } from "../client";
+import type { BoardEntry, Me, Member, Page } from "../contracts";
 
 export function Dashboard({
   member,
-  state,
+  initialActivity,
   onSignOut,
-  onSimulate,
   notify,
+  onSessionExpired,
 }: {
   member: Member;
-  state: PreviewState;
-  onSignOut: () => void;
-  onSimulate: () => void;
+  initialActivity: Me["activity"];
+  onSignOut: () => Promise<void>;
   notify: (message: string) => void;
+  onSessionExpired: () => void;
 }) {
-  const [expanded, setExpanded] = useState(false);
+  const [board, setBoard] = useState<Page<BoardEntry>>({ items: [], nextOffset: null });
+  const [activity, setActivity] = useState(initialActivity);
+  const [error, setError] = useState("");
+  const [boardLoading, setBoardLoading] = useState(true);
+  const [activityLoading, setActivityLoading] = useState(false);
   const linkInput = useRef<HTMLInputElement>(null);
-  const board = leaderboard(state);
-  const rank = board.findIndex((entry) => entry.id === member.id) + 1;
-  const shown = expanded ? board : board.slice(0, 5);
-  if (!shown.some((entry) => entry.id === member.id)) shown.push(board[rank - 1]);
+  function fail(failure: unknown) {
+    if (failure instanceof RequestError && failure.status === 401) onSessionExpired();
+    else setError(message(failure));
+  }
+  async function loadBoard(next = false) {
+    setBoardLoading(true);
+    setError("");
+    try {
+      const result = await api<Page<BoardEntry>>(
+        `leaderboard?${next ? `offset=${board.nextOffset}` : "top=true"}`,
+      );
+      setBoard((previous) => ({
+        ...result,
+        items: next ? [...previous.items, ...result.items] : result.items,
+      }));
+    } catch (failure) {
+      fail(failure);
+    } finally {
+      setBoardLoading(false);
+    }
+  }
+  useEffect(() => {
+    void loadBoard();
+  }, []);
+  const shown = [...board.items];
+  if (!shown.some((entry) => entry.isYou))
+    shown.push({ username: member.username, count: member.count, rank: member.rank, isYou: true });
+  shown.sort((a, b) => a.rank - b.rank);
   const shareLink = new URL(`/?ref=${member.code}`, location.origin).href;
+  async function moreActivity() {
+    setActivityLoading(true);
+    setError("");
+    try {
+      const result = await api<Me>(`me?offset=${activity.nextOffset}`);
+      setActivity((previous) => ({
+        ...result.activity,
+        items: [...previous.items, ...result.activity.items],
+      }));
+    } catch (failure) {
+      fail(failure);
+    } finally {
+      setActivityLoading(false);
+    }
+  }
   async function copyLink() {
     try {
       await navigator.clipboard.writeText(shareLink);
@@ -45,7 +88,7 @@ export function Dashboard({
             <span className="wl-avatar">{member.username.slice(0, 2).toUpperCase()}</span>
             <div>
               <b>{member.username}</b>
-              <button className="wl-text-btn" type="button" onClick={onSignOut}>
+              <button className="wl-text-btn" type="button" onClick={() => void onSignOut()}>
                 Sign out
               </button>
             </div>
@@ -54,12 +97,12 @@ export function Dashboard({
         <dl className="wl-stats">
           <div className="wl-stat">
             <dt>Verified referrals</dt>
-            <dd>{member.referrals.length}</dd>
+            <dd>{member.count}</dd>
             <p>Friends who joined through your link</p>
           </div>
           <div className="wl-stat">
             <dt>Referral rank</dt>
-            <dd>#{rank}</dd>
+            <dd>#{member.rank}</dd>
             <p>Keep sharing to move up</p>
           </div>
           <div className="wl-stat">
@@ -116,23 +159,18 @@ export function Dashboard({
               <h2 id="wl-activity-title">Referral activity</h2>
               <span className="wl-tag">Verified signups</span>
             </div>
-            {member.referrals.length ? (
-              [...member.referrals]
-                .reverse()
-                .slice(0, 5)
-                .map((referral) => (
-                  <div className="wl-activity-row" key={referral.id}>
-                    <b>
-                      {referral.simulated ? "Preview referral verified" : "New referral verified"}
-                    </b>
-                    <span>
-                      {new Date(referral.at).toLocaleDateString(undefined, {
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </span>
-                  </div>
-                ))
+            {activity.items.length ? (
+              activity.items.map((referral, index) => (
+                <div className="wl-activity-row" key={`${referral.at}-${index}`}>
+                  <b>New referral verified</b>
+                  <span>
+                    {new Date(referral.at).toLocaleDateString(undefined, {
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </span>
+                </div>
+              ))
             ) : (
               <div className="wl-empty">
                 <span className="wl-empty-icon" aria-hidden="true">
@@ -144,22 +182,36 @@ export function Dashboard({
                 </p>
               </div>
             )}
-            <details className="wl-demo-controls">
-              <summary>Preview controls</summary>
-              <p>
-                Try a verified referral to see your count, activity, and rank update. These changes
-                stay in this browser.
-              </p>
-              <button className="wl-btn wl-btn-ghost" type="button" onClick={onSimulate}>
-                Simulate a referral ↗
+            {activity.nextOffset !== null && (
+              <button
+                className="wl-text-btn"
+                type="button"
+                disabled={activityLoading}
+                onClick={() => void moreActivity()}
+              >
+                {activityLoading ? "Loading…" : "More activity"}
               </button>
-            </details>
+            )}
           </section>
         </div>
+        {error && (
+          <div className="wl-error" role="alert">
+            <p>{error}</p>
+            <button
+              className="wl-text-btn"
+              type="button"
+              disabled={boardLoading}
+              onClick={() => void loadBoard()}
+            >
+              Retry leaderboard
+            </button>
+          </div>
+        )}
+        {boardLoading && <p role="status">Loading leaderboard…</p>}
         <section className="wl-board" aria-labelledby="wl-board-title">
           <div className="wl-panel-head">
             <h2 id="wl-board-title">Referral leaderboard</h2>
-            <span className="wl-tag">Preview data</span>
+            <span className="wl-tag">Verified members</span>
           </div>
           <table>
             <thead>
@@ -171,11 +223,11 @@ export function Dashboard({
             </thead>
             <tbody>
               {shown.map((entry) => (
-                <tr key={entry.id} className={entry.id === member.id ? "wl-you" : undefined}>
-                  <td>{String(board.findIndex((m) => m.id === entry.id) + 1).padStart(2, "0")}</td>
+                <tr key={entry.username} className={entry.isYou ? "wl-you" : undefined}>
+                  <td>{String(entry.rank).padStart(2, "0")}</td>
                   <td>
                     {entry.username}
-                    {entry.id === member.id && <span className="wl-you-label">YOU</span>}
+                    {entry.isYou && <span className="wl-you-label">YOU</span>}
                   </td>
                   <td>{entry.count}</td>
                 </tr>
@@ -184,9 +236,26 @@ export function Dashboard({
           </table>
           <div className="wl-board-foot">
             <span>Ranked by verified referrals. Earlier verification breaks ties.</span>
-            <button className="wl-text-btn" type="button" onClick={() => setExpanded(!expanded)}>
-              {expanded ? "Show top members" : "Show all members"}
-            </button>
+            {board.nextOffset !== null && (
+              <button
+                className="wl-text-btn"
+                type="button"
+                disabled={boardLoading}
+                onClick={() => void loadBoard(true)}
+              >
+                {boardLoading ? "Loading…" : "Show more members"}
+              </button>
+            )}
+            {board.items.length > 5 && (
+              <button
+                className="wl-text-btn"
+                type="button"
+                disabled={boardLoading}
+                onClick={() => void loadBoard()}
+              >
+                Show top members
+              </button>
+            )}
           </div>
         </section>
         <p className="wl-note">

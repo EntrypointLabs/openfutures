@@ -8,19 +8,24 @@
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --test tests/*.test.ts",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "dev:full": "vercel dev --listen 3000",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@openfutures/ui": "workspace:*",
+    "@supabase/supabase-js": "^2.118.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-router": "^7.18.4"
   },
   "devDependencies": {
     "@openfutures/tsconfig": "workspace:*",
+    "@playwright/test": "^1.64.1",
     "@types/node": "^26.6.4",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "@vercel/node": "^24.0.2",
     "@vitejs/plugin-react": "^6.1.1",
     "typescript": "^7.0.2",
     "vite": "^8.3.2"
