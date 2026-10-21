@@ -8,7 +8,9 @@ import { COOKIE_NAME, signReferral } from "../server/referral.ts";
 const origin = "https://waitlist.example.com";
 const secret = "a-test-secret-longer-than-thirty-two-characters";
 const userId = "00000000-0000-0000-0000-000000000001";
-function fixture(options: { existing?: boolean; auth?: boolean; failure?: string } = {}) {
+function fixture(
+  options: { existing?: boolean; auth?: boolean; authStatus?: number; failure?: string } = {},
+) {
   const calls: { url: URL; body: any }[] = [];
   const db = createClient("https://supabase.example.com", "test-key", {
     auth: { persistSession: false, autoRefreshToken: false },
@@ -17,17 +19,19 @@ function fixture(options: { existing?: boolean; auth?: boolean; failure?: string
         const url = new URL(String(input));
         const body = init?.body ? JSON.parse(String(init.body)) : null;
         calls.push({ url, body });
-        if (url.pathname.endsWith("/user"))
+        if (url.pathname.endsWith("/user")) {
+          const status = options.authStatus ?? (options.auth === false ? 401 : 200);
           return Response.json(
-            options.auth === false
-              ? { msg: "invalid" }
-              : {
+            status === 200
+              ? {
                   id: userId,
                   email_confirmed_at: new Date().toISOString(),
                   email: "private@example.com",
-                },
-            { status: options.auth === false ? 401 : 200 },
+                }
+              : { msg: "invalid" },
+            { status },
           );
+        }
         if (url.pathname.includes("/rpc/"))
           return options.failure
             ? Response.json({ message: options.failure, code: "P0001" }, { status: 400 })
@@ -103,6 +107,12 @@ test("API validates method, origin, JSON, pagination and identity before databas
   assert.equal((await f.request("me", { headers: { authorization: "" } })).status, 401);
   assert.equal((await f.request("me", { query: { offset: "-1" } })).status, 400);
   assert.equal((await fixture({ auth: false }).request("me")).status, 401);
+  // A throttled or failing Auth provider is retryable, never an expired session.
+  for (const authStatus of [408, 429, 500, 502]) {
+    const response = await fixture({ authStatus }).request("me");
+    assert.equal(response.status, 503);
+    assert.equal(response.result.error.code, "auth_unavailable");
+  }
 });
 test("first valid referral is preserved; invalid input never overwrites; members cannot acquire attribution", async () => {
   const f = fixture();

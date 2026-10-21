@@ -56,7 +56,8 @@ before(async () => {
   ]);
   started = true;
   await sql(
-    "create role anon; create role authenticated; create role service_role bypassrls; create schema auth; create table auth.users(id uuid primary key, email_confirmed_at timestamptz); grant usage on schema auth to service_role; grant select on auth.users to service_role;",
+    // A real project grants service_role usage on auth but no read grant on auth.users.
+    "create role anon; create role authenticated; create role service_role bypassrls; create schema auth; create table auth.users(id uuid primary key, email_confirmed_at timestamptz); grant usage on schema auth to service_role;",
   );
   await sql(
     await readFile(
@@ -82,8 +83,17 @@ test(
   options,
   async () => {
     await sql(user(1, false));
-    await assert.rejects(sql(joinMember(1, "first")), /unverified_user/);
-    await sql(`update auth.users set email_confirmed_at=now(); ${joinMember(1, "First")}`);
+    await assert.rejects(
+      sql(`set role service_role; ${joinMember(1, "first")}`),
+      /unverified_user/,
+    );
+    await sql("update auth.users set email_confirmed_at=now()");
+    // service_role cannot read auth.users directly; the privileged helper must do it.
+    await assert.rejects(
+      sql("set role service_role; select 1 from auth.users"),
+      /permission denied/,
+    );
+    await sql(`set role service_role; ${joinMember(1, "First")}`);
     await sql(user(2));
     await assert.rejects(sql(joinMember(2, "first")), /username_taken/);
     assert.equal(await sql("select count(*) from public.waitlist_members"), "1");

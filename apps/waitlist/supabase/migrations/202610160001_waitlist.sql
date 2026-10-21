@@ -25,6 +25,14 @@ group by m.user_id;
 revoke all on public.waitlist_ranking from public, anon, authenticated;
 grant select on public.waitlist_ranking to service_role;
 
+-- service_role holds usage on auth but no read grant on auth.users, so the
+-- verification check runs through this narrowly scoped privileged helper.
+create function public.waitlist_user_is_verified(p_user_id uuid)
+returns boolean language sql stable security definer set search_path = '' as $$
+  select exists (
+    select 1 from auth.users where id = p_user_id and email_confirmed_at is not null);
+$$;
+
 create function public.create_waitlist_membership(p_user_id uuid, p_username text, p_referral_code text default null)
 returns void language plpgsql security invoker set search_path = '' as $$
 declare
@@ -35,7 +43,7 @@ begin
   -- Serialize retries for this identity, including requests from different devices/functions.
   perform pg_advisory_xact_lock(hashtextextended(p_user_id::text, 0));
   if exists (select 1 from public.waitlist_members where user_id = p_user_id) then return; end if;
-  if not exists (select 1 from auth.users where id = p_user_id and email_confirmed_at is not null) then
+  if not public.waitlist_user_is_verified(p_user_id) then
     raise exception 'unverified_user';
   end if;
   if p_username is null or p_username !~ '^[A-Za-z0-9_.-]{3,24}$' then raise exception 'invalid_username'; end if;
@@ -83,9 +91,11 @@ returns jsonb language sql stable security invoker set search_path = '' as $$
 $$;
 
 -- Only server functions may invoke these operations. No browser role can choose a user ID.
+revoke all on function public.waitlist_user_is_verified(uuid) from public, anon, authenticated;
 revoke all on function public.create_waitlist_membership(uuid, text, text) from public, anon, authenticated;
 revoke all on function public.waitlist_me(uuid, integer, integer) from public, anon, authenticated;
 revoke all on function public.waitlist_leaderboard(uuid, integer, integer) from public, anon, authenticated;
+grant execute on function public.waitlist_user_is_verified(uuid) to service_role;
 grant execute on function public.create_waitlist_membership(uuid, text, text) to service_role;
 grant execute on function public.waitlist_me(uuid, integer, integer) to service_role;
 grant execute on function public.waitlist_leaderboard(uuid, integer, integer) to service_role;

@@ -72,13 +72,16 @@ function body(req: VercelRequest): Record<string, unknown> {
     throw new ApiError(400, "invalid_body", "Invalid request.");
   return data;
 }
+const RETRYABLE_AUTH = new Set([408, 429]);
 async function identity(req: VercelRequest, db: SupabaseClient, optional = false) {
   const header = req.headers.authorization;
   if (!header && optional) return null;
   if (!header?.startsWith("Bearer "))
     throw new ApiError(401, "unauthorized", "Please sign in again.");
   const { data, error } = await db.auth.getUser(header.slice(7));
-  if (error && (!error.status || error.status >= 500))
+  // A missing, throttled or failing Auth response says nothing about the session itself,
+  // so it must never be reported as an expired sign-in.
+  if (error && (!error.status || error.status >= 500 || RETRYABLE_AUTH.has(error.status)))
     throw new ApiError(
       503,
       "auth_unavailable",

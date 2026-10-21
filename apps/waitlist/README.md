@@ -9,7 +9,9 @@ server is required in production: its assets are bundled during the waitlist bui
 Create separate Supabase projects for development/previews and production. For **each project**:
 
 1. Apply `supabase/migrations/202610160001_waitlist.sql` in the Supabase SQL editor, or use the
-   Supabase CLI to link the project and push the migration. Apply it once per project.
+   Supabase CLI to link the project and push the migration. Apply it once per project. Run it as
+   the project owner, as both routes do: the verification helper reads `auth.users` with its
+   owner's privileges, because `service_role` holds no read grant on that table.
 2. Enable email signup and email OTP under Authentication → Sign In / Providers → Email.
    Set OTP length to **6**, expiry to **600 seconds**, and the email send cooldown to **60 seconds**.
    Keep Supabase's authentication rate limits enabled; review email/IP limits for expected traffic.

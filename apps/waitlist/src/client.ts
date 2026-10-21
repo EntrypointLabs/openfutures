@@ -3,7 +3,9 @@ import type { Pending } from "./contracts.ts";
 
 const url = import.meta.env.VITE_SUPABASE_URL;
 const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-export const supabase = url && key ? createClient(url, key) : null;
+export const AUTH_KEY = "openfutures-waitlist-auth-v1";
+export const supabase =
+  url && key ? createClient(url, key, { auth: { storageKey: AUTH_KEY } }) : null;
 export class RequestError extends Error {
   code: string;
   status: number;
@@ -39,6 +41,20 @@ export async function api<T>(path: string, data?: Record<string, unknown>): Prom
       response.status,
     );
   return result;
+}
+// A rejected token must leave storage even when the provider cannot be reached, or every
+// later request keeps replaying the same 401 until the user clears site data by hand.
+export async function clearSession() {
+  try {
+    if (supabase && !(await supabase.auth.signOut({ scope: "local" })).error) return;
+  } catch {
+    /* Fall through to removing the stored session directly. */
+  }
+  try {
+    localStorage.removeItem(AUTH_KEY);
+  } catch {
+    /* Nothing more can be done; the next sign-in replaces the session. */
+  }
 }
 export const PENDING_KEY = "openfutures-waitlist-pending-v2";
 export function readPending(): Pending | null {

@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router";
-import { api, message, readPending, RequestError, savePending, supabase } from "./client";
+import {
+  api,
+  clearSession,
+  message,
+  readPending,
+  RequestError,
+  savePending,
+  supabase,
+} from "./client";
 import type { Me, Pending } from "./contracts";
 import { MarketingShell } from "./components/MarketingShell";
 import { SignupPage } from "./components/SignupPage";
@@ -23,6 +31,9 @@ export function App() {
     setAuthenticated(false);
     setMe(null);
     setError("Your session expired. Sign in again to continue.");
+    // Drop the stale session and the capture it rejected, so signing in again can proceed.
+    referralQueue.current = Promise.resolve();
+    void clearSession();
     navigate("/?mode=signin", { replace: true });
   }, [navigate]);
   const refresh = useCallback(async () => {
@@ -38,7 +49,8 @@ export function App() {
       if (current !== generation.current) return;
       setAuthenticated(!!session);
       setMe(result);
-      setError("");
+      // Signing out keeps the message that explains why, so only a session clears it.
+      if (session) setError("");
       if (result?.member) {
         setPending(null);
         savePending(null);
@@ -105,7 +117,8 @@ export function App() {
     if (!supabase) return "The waitlist is not configured yet.";
     const email = emailInput.trim().toLowerCase();
     try {
-      await referralQueue.current;
+      // A failed capture costs attribution, but it must never block requesting a code.
+      await referralQueue.current.catch(() => {});
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: { shouldCreateUser: !signIn },

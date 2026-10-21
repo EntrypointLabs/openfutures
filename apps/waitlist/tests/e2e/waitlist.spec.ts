@@ -261,7 +261,8 @@ test("a revoked session removes the dashboard and returns to sign-in", async ({
   await requestCode(page, "member@example.com", "member");
   await verify(page);
   await expect(page.getByRole("heading", { name: "You're on the list." })).toBeVisible();
-  await context.route("**/api/me", (route) =>
+  // A revoked token is rejected by every authenticated endpoint, captures included.
+  await context.route(/\/api\/(me|referrals\/capture)/, (route) =>
     route.fulfill({
       status: 401,
       json: { error: { code: "unauthorized", message: "Please sign in again." } },
@@ -271,6 +272,8 @@ test("a revoked session removes the dashboard and returns to sign-in", async ({
   await expect(page.getByRole("heading", { name: "Welcome back." })).toBeVisible();
   await expect(page.getByRole("alert")).toContainText("session expired");
   await expect(page.getByLabel("Your referral link")).toHaveCount(0);
+  // The stale session must be gone, so sign-in recovers without clearing site data by hand.
+  await requestCode(page, "member@example.com");
 });
 test("leaderboard pages append and a failed dashboard load can be retried", async ({
   context,
