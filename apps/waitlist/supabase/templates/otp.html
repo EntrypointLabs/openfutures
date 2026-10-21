@@ -3,17 +3,38 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="color-scheme" content="dark" />
-    <meta name="supported-color-schemes" content="dark" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="supported-color-schemes" content="light dark" />
+    <style>
+      :root { color-scheme: light dark; supported-color-schemes: light dark; }
+      /* Inline light colors provide a readable fallback; supporting clients follow the device. */
+      @media (prefers-color-scheme: dark) {
+        .email-canvas { background-color: #0d0d0d !important; color: #f5f5f4 !important; }
+        .email-background { background-color: #0d0d0d !important; }
+        .email-brand { color: #f5f5f4 !important; }
+        .email-brand-muted { color: #969694 !important; }
+        .email-panel { background-color: #141414 !important; border-color: #2e2e2e !important; border-top-color: #2d63f5 !important; }
+        .email-eyebrow { color: #969694 !important; }
+        .email-headline-first { background-color: #f5f5f4 !important; color: #0d0d0d !important; }
+        .email-headline-last { background-color: #f5f5f4 !important; color: #0d0d0d !important; }
+        .email-title { color: #f5f5f4 !important; }
+        .email-description { color: #b8b8b6 !important; }
+        .email-code { background-color: #f5f5f4 !important; color: #0d0d0d !important; }
+        .email-expiry { color: #969694 !important; }
+        .email-security { border-top: 1px solid #2e2e2e !important; color: #969694 !important; }
+        .email-steps { color: #969694 !important; }
+        .email-footer { color: #969694 !important; }
+      }
+    </style>
     <title>Your OpenFutures verification code</title>
     <!-- Table layout and inline styles keep the message readable in email clients. -->
   </head>
   <body
-    style="
+    class="email-canvas" style="
       margin: 0;
       padding: 0;
-      background-color: #0d0d0d;
-      color: #f5f5f4;
+      background-color: #f5f5f4;
+      color: #171717;
       font-family: Arial, Helvetica, sans-serif;
       -webkit-text-size-adjust: 100%;
     "
@@ -27,8 +48,8 @@
       cellpadding="0"
       cellspacing="0"
       border="0"
-      bgcolor="#0d0d0d"
-      style="background-color: #0d0d0d"
+      bgcolor="#f5f5f4"
+      class="email-background" style="background-color: #f5f5f4"
     >
       <tr>
         <td align="center" style="padding: 32px 16px">
@@ -43,32 +64,32 @@
           >
             <tr>
               <td
-                style="
+                class="email-brand" style="
                   padding: 0 0 24px;
                   font-family: &quot;Courier New&quot;, Courier, monospace;
                   font-size: 12px;
                   line-height: 20px;
                   letter-spacing: 1px;
-                  color: #f5f5f4;
+                  color: #171717;
                 "
               >
-                OPENFUTURES <span style="color: #969694">&nbsp;/&nbsp; EARLY ACCESS</span>
+                OPENFUTURES <span class="email-brand-muted" style="color: #666662">&nbsp;/&nbsp; EARLY ACCESS</span>
               </td>
             </tr>
             <tr>
               <td
-                bgcolor="#141414"
-                style="
-                  background-color: #141414;
-                  border: 1px solid #2e2e2e;
+                bgcolor="#ffffff"
+                class="email-panel" style="
+                  background-color: #ffffff;
+                  border: 1px solid #deded9;
                   border-top: 4px solid #2d63f5;
                   padding: 32px 24px;
                 "
               >
                 <p
-                  style="
+                  class="email-eyebrow" style="
                     margin: 0 0 28px;
-                    color: #969694;
+                    color: #666662;
                     font-family: &quot;Courier New&quot;, Courier, monospace;
                     font-size: 11px;
                     line-height: 18px;
@@ -87,21 +108,21 @@
                   "
                 >
                   <span
-                    style="
+                    class="email-headline-first" style="
                       display: inline-block;
                       padding: 2px 10px 5px;
-                      background-color: #f5f5f4;
-                      color: #0d0d0d;
+                      background-color: #171717;
+                      color: #f5f5f4;
                     "
                     >You're</span
                   ><br />
                   <span
-                    style="
+                    class="email-headline-last" style="
                       display: inline-block;
                       margin-left: 24px;
                       padding: 2px 10px 5px;
-                      background-color: #f5f5f4;
-                      color: #0d0d0d;
+                      background-color: #171717;
+                      color: #f5f5f4;
                       font-family: &quot;Courier New&quot;, Courier, monospace;
                       letter-spacing: -3px;
                     "
@@ -109,9 +130,9 @@
                   >
                 </h1>
                 <p
-                  style="
+                  class="email-title" style="
                     margin: 0 0 8px;
-                    color: #f5f5f4;
+                    color: #171717;
                     font-size: 20px;
                     line-height: 28px;
                     font-weight: 700;
@@ -119,17 +140,17 @@
                 >
                   Your verification code.
                 </p>
-                <p style="margin: 0 0 24px; color: #b8b8b6; font-size: 15px; line-height: 24px">
+                <p class="email-description" style="margin: 0 0 24px; color: #52524f; font-size: 15px; line-height: 24px">
                   Enter this code in OpenFutures to continue.
                 </p>
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                   <tr>
                     <td
-                      bgcolor="#f5f5f4"
+                      bgcolor="#171717"
                       align="center"
-                      style="
-                        background-color: #f5f5f4;
-                        color: #0d0d0d;
+                      class="email-code" style="
+                        background-color: #171717;
+                        color: #f5f5f4;
                         padding: 20px 8px;
                         font-family: &quot;Courier New&quot;, Courier, monospace;
                         font-size: 34px;
@@ -144,9 +165,9 @@
                   </tr>
                 </table>
                 <p
-                  style="
+                  class="email-expiry" style="
                     margin: 12px 0 28px;
-                    color: #969694;
+                    color: #666662;
                     font-family: &quot;Courier New&quot;, Courier, monospace;
                     font-size: 11px;
                     line-height: 18px;
@@ -157,10 +178,10 @@
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                   <tr>
                     <td
-                      style="
+                      class="email-security" style="
                         padding-top: 20px;
-                        border-top: 1px solid #2e2e2e;
-                        color: #969694;
+                        border-top: 1px solid #deded9;
+                        color: #666662;
                         font-size: 13px;
                         line-height: 21px;
                       "
@@ -173,9 +194,9 @@
             </tr>
             <tr>
               <td
-                style="
+                class="email-steps" style="
                   padding: 24px 0 0;
-                  color: #969694;
+                  color: #666662;
                   font-family: &quot;Courier New&quot;, Courier, monospace;
                   font-size: 10px;
                   line-height: 20px;
@@ -186,7 +207,7 @@
               </td>
             </tr>
             <tr>
-              <td style="padding-top: 8px; color: #969694; font-size: 12px; line-height: 20px">
+              <td class="email-footer" style="padding-top: 8px; color: #666662; font-size: 12px; line-height: 20px">
                 OpenFutures &nbsp;&middot;&nbsp; A head start, together.
               </td>
             </tr>
