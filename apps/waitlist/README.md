@@ -17,6 +17,9 @@ Create separate Supabase projects for development/previews and production. For *
    Keep Supabase's authentication rate limits enabled; review email/IP limits for expected traffic.
 3. Replace the email templates used for **Confirm signup** and **Magic Link** with
    `supabase/templates/otp.html`. The `{{ .Token }}` variable sends the code rather than a link.
+   Both signup and returning-member emails use the waitlist's dark palette, stepped heading,
+   blue accent and selectable code. Inline styles, table layout and system fonts avoid
+   depending on web fonts, scripts or remotely loaded images in inboxes.
 4. Verify a sending domain in Resend. Configure Supabase Authentication → SMTP with
    `smtp.resend.com`, port `465`, username `resend`, password set to the Resend API key, and a
    sender address on that verified domain. Supabase's default mail service is not production email.
@@ -31,6 +34,14 @@ secret must remain server-only. Generate a separate cookie secret per environmen
 
 Configure the same variables in the Vercel project's environment settings. `WAITLIST_ORIGIN`
 must exactly match the browser origin (scheme + hostname + port), including for each preview.
+For deployments served at both supplied domains, also set the server-only variable
+`WAITLIST_ALLOWED_ORIGINS=https://waitlist-zeta-lemon.vercel.app,https://waitlist.openfutures.xyz`.
+The primary `WAITLIST_ORIGIN` continues to work when this optional variable is absent. This is
+an exact allowlist, not a wildcard or a reflection of the request's Host header. Configure these
+same URLs in Supabase's redirect allowlist; its single primary Site URL should be
+`https://waitlist.openfutures.xyz`. Keep `http://localhost:3000` allowed for local development.
+Supabase's URL allowlist does not configure the API's origin check or create custom-domain DNS.
+
 Cookies are Secure on HTTPS and host-only; previews do not share attribution with production.
 
 ## Run and deploy

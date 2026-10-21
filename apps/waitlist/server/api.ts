@@ -2,11 +2,13 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { USERNAME_PATTERN } from "../src/contracts.ts";
 import { readReferral, referralCookie, signReferral } from "./referral.ts";
+import { parseAllowedOrigins } from "./origins.ts";
 
 type Endpoint = "capture" | "membership" | "me" | "leaderboard";
 export interface Services {
   db: SupabaseClient;
   origin: string;
+  allowedOrigins?: readonly string[];
   secret: string;
   secure: boolean;
 }
@@ -43,6 +45,7 @@ function services(): Services {
       auth: { persistSession: false, autoRefreshToken: false },
     }),
     origin,
+    allowedOrigins: parseAllowedOrigins(WAITLIST_ORIGIN, process.env.WAITLIST_ALLOWED_ORIGINS),
     secret: REFERRAL_COOKIE_SECRET,
     secure: origin.startsWith("https:"),
   };
@@ -126,8 +129,8 @@ export function handler(endpoint: Endpoint, provided?: Services) {
         res.setHeader("Allow", method);
         throw new ApiError(405, "method_not_allowed", "Method not allowed.");
       }
-      const { db, origin, secret, secure } = provided ?? services();
-      if (method === "POST" && req.headers.origin !== origin)
+      const { db, origin, allowedOrigins = [], secret, secure } = provided ?? services();
+      if (method === "POST" && ![origin, ...allowedOrigins].includes(req.headers.origin ?? ""))
         throw new ApiError(403, "invalid_origin", "Request origin is not allowed.");
       if (endpoint === "capture") {
         const input = body(req);

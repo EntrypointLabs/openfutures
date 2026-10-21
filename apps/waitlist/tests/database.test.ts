@@ -65,6 +65,15 @@ before(async () => {
       "utf8",
     ),
   );
+  // Reproduce the original deployed RPC, whose direct auth read fails for service_role.
+  const initial = await readFile(new URL("../supabase/migrations/202610160001_waitlist.sql", import.meta.url), "utf8");
+  const start = initial.indexOf("create function public.create_waitlist_membership");
+  const end = initial.indexOf("create function public.waitlist_me");
+  await sql(initial.slice(start, end).replace("create function", "create or replace function").replace("not public.waitlist_user_is_verified(p_user_id)", "not exists (select 1 from auth.users where id = p_user_id and email_confirmed_at is not null)"));
+  await sql(user(99));
+  await assert.rejects(sql(`set role service_role; ${joinMember(99, "before_repair")}`), /permission denied/);
+  // Existing deployments receive the fix through a forward migration.
+  await sql(await readFile(new URL("../supabase/migrations/202610210001_verified_membership.sql", import.meta.url), "utf8"));
 });
 after(async () => {
   if (started) await exec("pg_ctl", ["-D", directory, "-m", "immediate", "-w", "stop"]);
@@ -189,6 +198,10 @@ test(
       );
       await assert.rejects(
         sql(`set role ${role}; ${joinMember(1, "hacked")}`),
+        /permission denied/,
+      );
+      await assert.rejects(
+        sql(`set role ${role}; select public.waitlist_user_is_verified('${id(1)}')`),
         /permission denied/,
       );
       await assert.rejects(
