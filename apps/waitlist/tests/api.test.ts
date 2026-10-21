@@ -9,7 +9,13 @@ const origin = "https://waitlist.example.com";
 const secret = "a-test-secret-longer-than-thirty-two-characters";
 const userId = "00000000-0000-0000-0000-000000000001";
 function fixture(
-  options: { existing?: boolean; auth?: boolean; authStatus?: number; failure?: string } = {},
+  options: {
+    existing?: boolean;
+    auth?: boolean;
+    authStatus?: number;
+    failure?: string;
+    allowedOrigins?: string[];
+  } = {},
 ) {
   const calls: { url: URL; body: any }[] = [];
   const db = createClient("https://supabase.example.com", "test-key", {
@@ -87,7 +93,13 @@ function fixture(
         return res;
       },
     } as unknown as VercelResponse;
-    await handler(endpoint, { db, origin, secret, secure: true })(req, res);
+    await handler(endpoint, {
+      db,
+      origin,
+      secret,
+      secure: true,
+      allowedOrigins: options.allowedOrigins,
+    })(req, res);
     return { status, result, headers };
   }
   return { request, calls };
@@ -186,4 +198,31 @@ test("SPA fallback excludes every API endpoint while retaining frontend deep lin
     assert.equal(fallback.test(path), false, path);
   for (const path of ["/", "/dashboard", "/waitlist", "/waitlist/dashboard"])
     assert.equal(fallback.test(path), true, path);
+});
+test("cookie-setting API requests accept only the primary or an explicitly configured deployment origin", async () => {
+  const alias = "https://waitlist-zeta-lemon.vercel.app";
+  const f = fixture({ allowedOrigins: [alias] });
+  assert.equal(
+    (await f.request("capture", { headers: { origin: alias }, body: { code: "ABCD2345" } })).status,
+    200,
+  );
+  assert.equal(
+    (await f.request("membership", { headers: { origin: alias }, body: { username: "Member" } }))
+      .status,
+    200,
+  );
+  assert.equal(
+    (await f.request("capture", { headers: { origin: "https://other.vercel.app" } })).status,
+    403,
+  );
+  assert.equal(
+    (
+      await f.request("capture", {
+        headers: { origin: "https://waitlist-zeta-lemon.vercel.app.evil.example" },
+      })
+    ).status,
+    403,
+  );
+  assert.equal((await f.request("capture", { headers: { origin: "" } })).status, 403);
+  assert.equal((await fixture().request("capture", { headers: { origin: alias } })).status, 403);
 });
