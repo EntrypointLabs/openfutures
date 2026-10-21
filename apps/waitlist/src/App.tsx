@@ -1,161 +1,232 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router";
 import {
-  captureReferral,
-  completeVerification,
-  DEMO_CODE,
-  emptyPreview,
-  parsePreview,
-  PENDING_KEY,
+  api,
+  clearSession,
+  message,
   readPending,
-  STORAGE_KEY,
-  uniqueCode,
-} from "./preview";
-import type { Pending, PreviewState } from "./preview";
+  RequestError,
+  savePending,
+  supabase,
+} from "./client";
+import type { Me, Pending } from "./contracts";
 import { MarketingShell } from "./components/MarketingShell";
 import { SignupPage } from "./components/SignupPage";
 import { Dashboard } from "./components/Dashboard";
 
-function initialPreview() {
-  let state = emptyPreview();
-  try {
-    state = parsePreview(localStorage.getItem(STORAGE_KEY));
-  } catch {
-    /* Memory-only preview. */
-  }
-  return captureReferral(state, new URLSearchParams(location.search).get("ref"));
-}
-
 export function App() {
-  const [state, setState] = useState<PreviewState>(initialPreview);
+  const [me, setMe] = useState<Me | null>(null);
+  const [authenticated, setAuthenticated] = useState(false);
   const [pending, setPending] = useState<Pending | null>(readPending);
-  const [storageAvailable, setStorageAvailable] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [referrer, setReferrer] = useState<string | null>(null);
   const [toast, setToast] = useState("");
   const route = useLocation();
   const navigate = useNavigate();
-  const member = state.members.find((entry) => entry.id === state.session);
-
-  // Synchronize the browser-only preview with browser storage, never a service.
-  useEffect(() => {
+  const generation = useRef(0);
+  const referralQueue = useRef(Promise.resolve());
+  const sessionExpired = useCallback(() => {
+    generation.current++;
+    setAuthenticated(false);
+    setMe(null);
+    setError("Your session expired. Sign in again to continue.");
+    // Drop the stale session and the capture it rejected, so signing in again can proceed.
+    referralQueue.current = Promise.resolve();
+    void clearSession();
+    navigate("/?mode=signin", { replace: true });
+  }, [navigate]);
+  const refresh = useCallback(async () => {
+    const current = ++generation.current;
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch {
-      setStorageAvailable(false);
+      if (!supabase) throw new Error("The waitlist is not configured yet. Please try again later.");
+      const {
+        data: { session },
+        error: authError,
+      } = await supabase.auth.getSession();
+      if (authError) throw authError;
+      const result = session ? await api<Me>("me") : null;
+      if (current !== generation.current) return;
+      setAuthenticated(!!session);
+      setMe(result);
+      // Signing out keeps the message that explains why, so only a session clears it.
+      if (session) setError("");
+      if (result?.member) {
+        setPending(null);
+        savePending(null);
+      }
+    } catch (failure) {
+      if (current !== generation.current) return;
+      if (failure instanceof RequestError && failure.status === 401) {
+        sessionExpired();
+        setLoading(false);
+      } else setError(message(failure));
+    } finally {
+      if (current === generation.current) setLoading(false);
     }
-  }, [state]);
+  }, [sessionExpired]);
   useEffect(() => {
-    try {
-      if (pending) sessionStorage.setItem(PENDING_KEY, JSON.stringify(pending));
-      else sessionStorage.removeItem(PENDING_KEY);
-    } catch {
-      /* The flow remains usable in memory. */
-    }
-  }, [pending]);
-  useEffect(() => {
-    const receive = (event: StorageEvent) => {
-      if (event.key === STORAGE_KEY) setState(parsePreview(event.newValue));
+    void refresh();
+    const listener = supabase?.auth.onAuthStateChange(() => {
+      // Schedule outside Supabase's auth callback to avoid SDK lock re-entry.
+      setTimeout(() => {
+        void refresh();
+      }, 0);
+    });
+    return () => {
+      generation.current++;
+      listener?.data.subscription.unsubscribe();
     };
-    window.addEventListener("storage", receive);
-    return () => window.removeEventListener("storage", receive);
-  }, []);
+  }, [refresh]);
+  useEffect(() => {
+    savePending(pending);
+  }, [pending]);
+  const capture = useCallback(() => {
+    const code = new URLSearchParams(route.search).get("ref");
+    // Serialize captures so two route changes cannot overwrite first touch concurrently.
+    referralQueue.current = referralQueue.current
+      .catch(() => {})
+      .then(async () => {
+        const result = await api<{ referrer: string | null }>("referrals/capture", { code });
+        setReferrer(result.referrer);
+      });
+    return referralQueue.current;
+  }, [route.search]);
   useEffect(() => {
     document.title = `${route.pathname.endsWith("dashboard") ? "Your waitlist" : "Waitlist"} — OpenFutures`;
     window.scrollTo(0, 0);
-    setState((previous) => captureReferral(previous, new URLSearchParams(route.search).get("ref")));
-  }, [route.pathname, route.search]);
+    void capture().catch((failure) => {
+      if (failure instanceof RequestError && failure.status === 401) sessionExpired();
+      else setError(message(failure));
+    });
+  }, [route.pathname, capture, sessionExpired]);
+  async function retry() {
+    try {
+      await capture();
+      await refresh();
+    } catch (failure) {
+      setError(message(failure));
+    }
+  }
   useEffect(() => {
     if (!toast) return;
-    const timeout = window.setTimeout(() => setToast(""), 3500);
-    return () => window.clearTimeout(timeout);
+    const timer = setTimeout(() => setToast(""), 3500);
+    return () => clearTimeout(timer);
   }, [toast]);
-
-  function start(emailInput: string, usernameInput: string, signIn: boolean) {
+  async function start(emailInput: string, usernameInput: string, signIn: boolean) {
+    if (!supabase) return "The waitlist is not configured yet.";
     const email = emailInput.trim().toLowerCase();
-    const username = usernameInput.trim();
-    const existing = state.members.find((entry) => entry.email === email);
-    if (signIn && !existing)
-      return "No preview account with this email yet. Join the waitlist first.";
-    if (
-      !existing &&
-      state.members.some((entry) => entry.username.toLowerCase() === username.toLowerCase())
-    )
-      return "That username is taken in this preview. Try another.";
-    setPending({
-      email,
-      username: existing?.username || username,
-      referrer: state.attribution?.code || null,
-      sentAt: Date.now(),
-    });
-    return "";
+    try {
+      // A failed capture costs attribution, but it must never block requesting a code.
+      await referralQueue.current.catch(() => {});
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: { shouldCreateUser: !signIn },
+      });
+      if (error) {
+        // An unknown email in sign-in mode should not expose account existence.
+        if (!(signIn && error.code === "otp_disabled")) throw error;
+      }
+      setPending({ email, username: usernameInput.trim(), signIn, sentAt: Date.now() });
+      return "";
+    } catch (failure) {
+      return message(failure);
+    }
   }
-  function verify(code: string) {
-    if (!pending) return "Request a new preview code to continue.";
-    if (Date.now() - pending.sentAt > 10 * 60000)
-      return "This preview code expired. Request a new code below.";
-    if (code !== DEMO_CODE) return "That code doesn’t match. Use 123456 for this preview.";
-    setState(completeVerification(state, pending, crypto.randomUUID(), uniqueCode(state)));
-    setPending(null);
-    navigate("/dashboard");
-    return "";
+  async function complete(username: string) {
+    try {
+      await referralQueue.current;
+      await api("membership", { username });
+      const result = await api<Me>("me");
+      generation.current++;
+      setAuthenticated(true);
+      setMe(result);
+      setPending(null);
+      savePending(null);
+      setError("");
+      navigate("/dashboard");
+      return "";
+    } catch (failure) {
+      if (failure instanceof RequestError && failure.status === 401) sessionExpired();
+      return message(failure);
+    }
   }
-  function signOut() {
-    setState({ ...state, session: null });
+  async function verify(code: string) {
+    if (!pending || !supabase) return "Request a new code to continue.";
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        email: pending.email,
+        token: code,
+        type: "email",
+      });
+      if (error) throw error;
+      setAuthenticated(true);
+      const result = await api<Me>("me");
+      setMe(result);
+      if (result.member) {
+        setPending(null);
+        savePending(null);
+        navigate("/dashboard");
+        return "";
+      }
+      if (pending.username) return await complete(pending.username);
+      return "";
+    } catch (failure) {
+      return message(failure);
+    }
+  }
+  async function signOut() {
+    if (!supabase) return;
+    const { error } = await supabase.auth.signOut({ scope: "local" });
+    if (error) {
+      setToast(message(error));
+      return;
+    }
+    generation.current++;
+    setAuthenticated(false);
+    setMe(null);
     setPending(null);
+    savePending(null);
+    setError("");
     navigate("/?mode=signin");
   }
-  function simulate() {
-    if (!member) return;
-    const referral = { id: crypto.randomUUID(), at: Date.now(), simulated: true };
-    setState({
-      ...state,
-      members: state.members.map((entry) =>
-        entry.id === member.id ? { ...entry, referrals: [...entry.referrals, referral] } : entry,
-      ),
-    });
-    setToast("Preview referral verified. Your progress is updated.");
-  }
+  const signup = (
+    <SignupPage
+      key={route.search.includes("mode=signin") ? "signin" : "signup"}
+      pending={pending}
+      member={me?.member ?? undefined}
+      referrer={referrer}
+      profileRequired={authenticated && !me?.member}
+      loading={loading}
+      serviceError={error}
+      signInInitially={new URLSearchParams(route.search).get("mode") === "signin"}
+      onStart={start}
+      onVerify={verify}
+      onComplete={complete}
+      onRetry={retry}
+      onChangeEmail={() => setPending(null)}
+      onResend={async () =>
+        pending ? start(pending.email, pending.username, pending.signIn) : "Request a new code."
+      }
+      onUseAnother={signOut}
+    />
+  );
   return (
     <MarketingShell toast={toast}>
       <Routes>
-        <Route
-          path="/"
-          element={
-            <SignupPage
-              key={route.search.includes("mode=signin") ? "signin" : "signup"}
-              state={state}
-              pending={pending}
-              member={member}
-              signInInitially={new URLSearchParams(route.search).get("mode") === "signin"}
-              storageAvailable={storageAvailable}
-              onStart={start}
-              onVerify={verify}
-              onChangeEmail={() => setPending(null)}
-              onResend={() => {
-                if (pending) setPending({ ...pending, sentAt: Date.now() });
-                setToast("Preview code refreshed. Use 123456.");
-              }}
-              onUseAnother={() => {
-                setState(
-                  captureReferral(
-                    { ...state, session: null },
-                    new URLSearchParams(route.search).get("ref"),
-                  ),
-                );
-                setPending(null);
-              }}
-            />
-          }
-        />
+        <Route path="/" element={signup} />
         <Route
           path="/dashboard"
           element={
-            member ? (
+            loading || error || (authenticated && !me?.member) ? (
+              signup
+            ) : me?.member ? (
               <Dashboard
-                state={state}
-                member={member}
+                member={me.member}
+                initialActivity={me.activity}
                 onSignOut={signOut}
-                onSimulate={simulate}
                 notify={setToast}
+                onSessionExpired={sessionExpired}
               />
             ) : (
               <Navigate to="/?mode=signin" replace />
@@ -163,7 +234,10 @@ export function App() {
           }
         />
         <Route path="/waitlist" element={<Navigate to={"/" + route.search} replace />} />
-        <Route path="/waitlist/dashboard" element={<Navigate to="/dashboard" replace />} />
+        <Route
+          path="/waitlist/dashboard"
+          element={<Navigate to={"/dashboard" + route.search} replace />}
+        />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </MarketingShell>

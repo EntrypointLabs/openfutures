@@ -816,7 +816,7 @@ export function MarketingFooter() {
                       } as CSSProperties
                     }
                   >
-                    {"\u00a9 2026 Entrypoint Labs. Preview data is simulated."}
+                    {"\u00a9 2026 Entrypoint Labs. All rights reserved."}
                   </p>
                 </div>
               </div>
@@ -1934,7 +1934,7 @@ export function MarketingFooter() {
                       } as CSSProperties
                     }
                   >
-                    {"\u00a9 2026 Entrypoint Labs. Preview data is simulated."}
+                    {"\u00a9 2026 Entrypoint Labs. All rights reserved."}
                   </p>
                 </div>
               </div>
@@ -2924,7 +2924,7 @@ export function MarketingFooter() {
                       } as CSSProperties
                     }
                   >
-                    {"\u00a9 2026 Entrypoint Labs. Preview data is simulated."}
+                    {"\u00a9 2026 Entrypoint Labs. All rights reserved."}
                   </p>
                 </div>
               </div>
