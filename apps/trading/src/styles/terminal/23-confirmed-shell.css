@@ -1,0 +1,19 @@
+/* Navigation additions from OPE-2. Keep the existing Trade and Prop shell intact. */
+.tb-title, .tb-back, .tb-ai { display: none; }
+@media (min-width: 768px) and (max-width: 1199px) {
+  .topbar { gap: 12px; }
+  .topbar .nav button { padding-inline: 8px; }
+  .topbar .srch-trigger { max-width: 220px; }
+}
+@media (max-width: 767px) {
+  .app:is([data-screen="watch"], [data-screen="copy"], [data-screen="points"], [data-screen="liquidity"]) .topbar .brand { display: none; }
+  .app:is([data-screen="watch"], [data-screen="copy"], [data-screen="points"], [data-screen="liquidity"]) .tb-title { display: block; font-size: 22px; font-weight: 700; letter-spacing: -.02em; white-space: nowrap; }
+  .app:is([data-screen="watch"], [data-screen="points"], [data-screen="liquidity"]) .tb-ai { display: grid; place-items: center; flex: none; width: 40px; height: 40px; padding: 0; margin-left: auto; border: 0; background: transparent; color: var(--text); }
+  .app:is([data-screen="watch"], [data-screen="points"], [data-screen="liquidity"]) .ai-launch { display: none; }
+  .app:is([data-screen="watch"], [data-screen="points"], [data-screen="liquidity"]) .top-actions { margin-left: 0; }
+  .app[data-screen="points"] .tb-back { display: grid; place-items: center; flex: none; width: 32px; height: 40px; margin-left: -8px; padding: 0; border: 0; background: transparent; color: var(--text); }
+  .page-watch .page-head h1 { display: none; }
+  .app[data-screen="copy"]:has(.copy-trader-detail) .topbar,
+  .app[data-screen="copy"]:has(.copy-trader-detail) .ai-launch { display: none; }
+  .app:is([data-screen="copy"], [data-screen="points"]) .page { display: block; }
+}

@@ -60,13 +60,13 @@ export function MarketsTable({ vm }: { vm: TerminalViewModel }) {
         <div role="columnheader">
           <span className="rk">#</span>Market
         </div>
-        <SortHeader sort={vm.ws?.price} label="Price" />
-        <SortHeader sort={vm.ws?.chg} label="24h change" />
+        <SortHeader sort={vm.ws?.price} label="Price (USD)" />
+        <SortHeader sort={vm.ws?.chg} label="24h change (%)" />
         <div role="columnheader">7 Days</div>
-        <SortHeader sort={vm.ws?.vol} label="24h volume" />
-        <SortHeader sort={vm.ws?.oi} label="Open interest" />
-        <div role="columnheader">Open Interest by Venue</div>
-        <SortHeader sort={vm.ws?.fund} label="Funding, 1h" />
+        <SortHeader sort={vm.ws?.vol} label="24h Volume (USD)" />
+        <SortHeader sort={vm.ws?.oi} label="Open Interest (USD)" />
+        <div role="columnheader">Open Interest by Venue (%)</div>
+        <SortHeader sort={vm.ws?.fund} label="Funding, 1h (%)" />
         <div role="columnheader">Venues</div>
         <div role="columnheader">
           <span className="sr">Trade</span>
@@ -112,10 +112,10 @@ export function MarketsTable({ vm }: { vm: TerminalViewModel }) {
                   </button>
                 </div>
                 <div role="cell">
-                  <span className={row?.flash}>${row?.price}</span>
+                  <span className={row?.flash}>{row?.price}</span>
                 </div>
                 <div role="cell" className={row?.dir}>
-                  {row?.chgText}
+                  {row?.chgN}
                 </div>
                 <div role="cell">
                   <svg
@@ -133,8 +133,8 @@ export function MarketsTable({ vm }: { vm: TerminalViewModel }) {
                     />
                   </svg>
                 </div>
-                <div role="cell">{row?.vol}</div>
-                <div role="cell">{row?.oi}</div>
+                <div role="cell">{row?.volN}</div>
+                <div role="cell">{row?.oiN}</div>
                 <div role="cell">
                   <span className="oibar" aria-hidden="true">
                     {(row?.split || []).map((splitItem, i2) => (
@@ -149,11 +149,11 @@ export function MarketsTable({ vm }: { vm: TerminalViewModel }) {
                   </span>
                   <small className="oitop">
                     <img className="logo xxs" src={row?.topLogo} data-venue="1" alt="" />
-                    {row?.topText}
+                    {row?.topTextN}
                   </small>
                 </div>
                 <div role="cell" className={row?.fundCls}>
-                  {row?.fund}
+                  {row?.fundN}
                 </div>
                 <div role="cell">
                   <span className="stack">
